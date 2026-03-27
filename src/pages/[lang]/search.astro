@@ -1,0 +1,455 @@
+---
+// apps/marketplace/src/pages/[lang]/search.astro
+// Full search page with advanced filters and map view
+export const prerender = false;
+import { query } from '../../lib/db';
+import '../../styles/global.css';
+import { ui } from '../../i18n/ui';
+import Layout from '../../layouts/Layout.astro';
+import { GameCard } from '../../components/GameCard';
+import { AdvancedFilters } from '../../components/react/AdvancedFilters';
+import { MapSearch } from '../../components/react/MapSearch';
+import { getDefaultRoomImage } from '../../lib/default-room-images';
+
+const { lang } = Astro.params;
+const t = (key: keyof typeof ui['es']) => ui[lang as keyof typeof ui]?.[key] || key;
+
+// Get all query params
+const searchParams = Astro.url.searchParams;
+const q = searchParams.get('q') || '';
+const city = searchParams.get('city') || '';
+const province = searchParams.get('province') || '';
+const players = Number(searchParams.get('players')) || 0;
+const difficulty = searchParams.get('difficulty')?.split(',').map(Number).filter(Boolean) || [];
+const fearLevel = searchParams.get('fear')?.split(',').map(Number).filter(Boolean) || [];
+const themes = searchParams.get('themes')?.split(',').filter(Boolean) || [];
+const minPrice = Number(searchParams.get('minPrice')) || 0;
+const maxPrice = Number(searchParams.get('maxPrice')) || 200;
+const pricing = searchParams.get('pricing') || 'per_person';
+const minRating = Number(searchParams.get('minRating')) || 0;
+const sortBy = searchParams.get('sort') || 'relevance';
+const view = searchParams.get('view') || 'grid';
+
+let games = [] as any[];
+let errorMessage = '';
+
+try {
+  let queryText = `
+    SELECT r.*
+    FROM rooms r
+    WHERE r.is_active = true
+  `;
+  const params: any[] = [];
+  let paramIndex = 1;
+
+  // Text search
+  if (q) {
+    queryText += ` AND (LOWER(r.name) LIKE $${paramIndex} OR LOWER(r.description) LIKE $${paramIndex})`;
+    params.push(`%${q.toLowerCase()}%`);
+    paramIndex++;
+  }
+
+  // Location filters
+  if (city) {
+    queryText += ` AND LOWER(r.city) LIKE $${paramIndex}`;
+    params.push(`%${city.toLowerCase()}%`);
+    paramIndex++;
+  }
+
+  if (province) {
+    queryText += ` AND LOWER(r.province) LIKE $${paramIndex}`;
+    params.push(`%${province.toLowerCase()}%`);
+    paramIndex++;
+  }
+
+  // Players filter
+  if (players > 0) {
+    queryText += ` AND r.capacity_min <= $${paramIndex} AND r.capacity >= $${paramIndex}`;
+    params.push(players);
+    paramIndex++;
+  }
+
+  // Difficulty filter (numeric in rooms table)
+  if (difficulty.length > 0) {
+    queryText += ` AND r.difficulty_level = ANY($${paramIndex}::int[])`;
+    params.push(difficulty);
+    paramIndex++;
+  }
+
+  // Price filter
+  if (minPrice > 0) {
+    queryText += ` AND r.price_per_person >= $${paramIndex}`;
+    params.push(minPrice);
+    paramIndex++;
+  }
+  if (maxPrice < 200) {
+    queryText += ` AND r.price_per_person <= $${paramIndex}`;
+    params.push(maxPrice);
+    paramIndex++;
+  }
+
+  // Pricing model filter
+  if (pricing === 'per_session') {
+    queryText += ` AND r.pricing_model = 'per_session'`;
+  } else if (pricing === 'per_person') {
+    queryText += ` AND (r.pricing_model = 'per_person' OR r.pricing_model IS NULL)`;
+  }
+
+  // Rating filter
+  if (minRating > 0) {
+    queryText += ` AND r.average_rating >= $${paramIndex}`;
+    params.push(minRating);
+    paramIndex++;
+  }
+
+  // Sorting
+  switch (sortBy) {
+    case 'price_low':
+      queryText += ' ORDER BY r.price_per_person ASC NULLS LAST';
+      break;
+    case 'price_high':
+      queryText += ' ORDER BY r.price_per_person DESC NULLS LAST';
+      break;
+    case 'rating':
+      queryText += ' ORDER BY r.average_rating DESC NULLS LAST';
+      break;
+    case 'newest':
+      queryText += ' ORDER BY r.created_at DESC';
+      break;
+    default:
+      queryText += ' ORDER BY r.average_rating DESC NULLS LAST, r.created_at DESC';
+  }
+
+  const { rows } = await query(queryText, params);
+
+  games = rows.map(g => ({
+    id: g.id,
+    slug: g.slug || g.id,
+    name: g.name,
+    city: g.city || 'España',
+    province: g.province || '',
+    players_min: g.capacity_min || 2,
+    players_max: g.capacity || 6,
+    duration: g.duration_minutes || 60,
+    difficulty: g.difficulty_level ? `Nivel ${g.difficulty_level}` : 'Normal',
+    fear_level: 0,
+    price_min: parseFloat(g.price_per_person) || 0,
+    images: g.image_url ? [g.image_url] : [getDefaultRoomImage(g.id)],
+    description: g.description,
+    rating: parseFloat(g.average_rating) || 0,
+    reviews_count: g.total_reviews || 0,
+    isVerified: false,
+    isFeatured: false,
+    latitude: g.latitude || null,
+    longitude: g.longitude || null,
+    themes: g.themes || [],
+    pricing_model: g.pricing_model || 'per_person',
+  }));
+
+  console.log(`[Search] Found ${games.length} games`);
+
+} catch (error: any) {
+  console.error('[Search] Error:', error.message);
+  errorMessage = 'Error loading rooms';
+}
+
+const resultsCount = games.length;
+const isMapView = view === 'map';
+
+// Active filters count
+const activeFiltersCount = [
+  q, city, province, players > 0, difficulty.length > 0, 
+  fearLevel.length > 0, minPrice > 0, maxPrice < 200, minRating > 0
+].filter(Boolean).length;
+
+// Initial filters for the component
+const initialFilters = {
+  city,
+  province,
+  players,
+  difficulty,
+  fearLevel,
+  priceMin: minPrice,
+  priceMax: maxPrice,
+  priceType: pricing as any,
+  minRating,
+  sortBy
+};
+---
+
+<Layout title={`${lang === 'en' ? 'Search Rooms' : 'Buscar Salas'} | EscapeMaster`}>
+  <main class="min-h-screen bg-gray-50 pb-20 sm:pb-6">
+    <!-- Header -->
+    <section class="bg-white border-b border-gray-200 pt-20 sm:pt-24 pb-4 sm:pb-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <!-- Title Row -->
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">
+              {q ? (lang === 'en' ? `Results for "${q}"` : `Resultados para "${q}"`) : (lang === 'en' ? 'All Rooms' : 'Todas las Salas')}
+            </h1>
+            {(city || province) && (
+              <p class="text-sm text-gray-500 mt-0.5">
+                {city}{province && `, ${province}`}
+              </p>
+            )}
+          </div>
+          
+          <!-- Mobile Filter Button -->
+          <button 
+            id="mobileFilterBtn"
+            class="lg:hidden flex items-center gap-2 px-4 py-2 bg-tropical-primary text-white rounded-xl font-semibold text-sm active:scale-95 transition-transform"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/></svg>
+            {lang === 'en' ? 'Filters' : 'Filtros'}
+            {activeFiltersCount > 0 && (
+              <span class="bg-white text-tropical-primary w-5 h-5 rounded-full text-xs font-bold flex items-center justify-center">
+                {activeFiltersCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mb-4">
+          <form action={`/${lang}/search`} method="GET" class="relative">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg>
+            <input
+              type="text"
+              name="q"
+              value={q}
+              placeholder={lang === 'en' ? 'Search escape rooms...' : 'Buscar escape rooms...'}
+              class="w-full pl-12 pr-4 py-3 sm:py-3.5 bg-gray-100 border-0 rounded-xl sm:rounded-2xl text-base focus:ring-2 focus:ring-tropical-primary focus:bg-white transition-all"
+            />
+          </form>
+        </div>
+
+        <!-- Controls Row -->
+        <div class="flex items-center justify-between gap-2">
+          <!-- Results Count -->
+          <div class="px-3 py-1.5 bg-gray-100 rounded-lg sm:rounded-xl">
+            <span class="text-xs sm:text-sm font-bold text-gray-700">{resultsCount} {lang === 'en' ? 'rooms' : 'salas'}</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <!-- Sort Dropdown -->
+            <div class="hidden sm:block relative">
+              <select 
+                id="sortSelect"
+                class="appearance-none bg-gray-100 border-0 rounded-xl px-4 py-2 pr-10 text-sm font-medium text-gray-700 cursor-pointer focus:ring-2 focus:ring-tropical-primary"
+              >
+                <option value="relevance" selected={sortBy === 'relevance'}>{lang === 'en' ? 'Relevance' : 'Relevancia'}</option>
+                <option value="rating" selected={sortBy === 'rating'}>{lang === 'en' ? 'Best rated' : 'Mejor valorados'}</option>
+                <option value="price_low" selected={sortBy === 'price_low'}>{lang === 'en' ? 'Price: low to high' : 'Precio: menor a mayor'}</option>
+                <option value="price_high" selected={sortBy === 'price_high'}>{lang === 'en' ? 'Price: high to low' : 'Precio: mayor a menor'}</option>
+                <option value="newest" selected={sortBy === 'newest'}>{lang === 'en' ? 'Newest' : 'Más nuevos'}</option>
+              </select>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+
+            <!-- View Toggle -->
+            <div class="flex bg-gray-100 rounded-lg sm:rounded-xl p-1">
+              <a
+                href={`/${lang}/search?${new URLSearchParams({...Object.fromEntries(searchParams), view: 'grid'}).toString()}`}
+                class={`p-2 rounded-md sm:rounded-lg transition-colors ${!isMapView ? 'bg-white shadow-sm text-tropical-primary' : 'text-gray-500 hover:text-gray-700'}`}
+                title={lang === 'en' ? 'Grid view' : 'Vista cuadrícula'}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+              </a>
+              <a
+                href={`/${lang}/search?${new URLSearchParams({...Object.fromEntries(searchParams), view: 'map'}).toString()}`}
+                class={`p-2 rounded-md sm:rounded-lg transition-colors ${isMapView ? 'bg-white shadow-sm text-tropical-primary' : 'text-gray-500 hover:text-gray-700'}`}
+                title={lang === 'en' ? 'Map view' : 'Vista mapa'}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+      <div class="flex gap-6">
+        <!-- Desktop Filters Sidebar -->
+        <aside class="hidden lg:block w-72 flex-shrink-0">
+          <div class="sticky top-28 bg-white rounded-2xl border border-gray-200 p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-gray-900">{lang === 'en' ? 'Filters' : 'Filtros'}</h3>
+              {activeFiltersCount > 0 && (
+                <a href={`/${lang}/search`} class="text-sm text-tropical-primary font-medium hover:underline">
+                  {lang === 'en' ? 'Clear all' : 'Limpiar'}
+                </a>
+              )}
+            </div>
+            <AdvancedFilters 
+              client:load
+              lang={lang} 
+              initialFilters={initialFilters}
+              hideHeader={true}
+            />
+          </div>
+        </aside>
+
+        <!-- Results Grid/Map -->
+        <div class="flex-1">
+          {isMapView ? (
+            <!-- Map View -->
+            <div>
+              <div class="h-[calc(100vh-280px)] sm:h-[calc(100vh-300px)] rounded-xl sm:rounded-2xl bg-white relative">
+                <MapSearch 
+                  client:load
+                  rooms={games} 
+                  lang={lang}
+                />
+              </div>
+              
+              <!-- Featured rooms below map -->
+              {games.length > 0 && (
+                <div class="mt-6">
+                  <h2 class="text-lg font-bold text-gray-900 mb-4">
+                    {lang === 'en' ? 'Rooms on the map' : 'Salas en el mapa'}
+                    <span class="text-sm font-normal text-gray-500 ml-2">({games.length})</span>
+                  </h2>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-8">
+                    {games.slice(0, 6).map((game) => (
+                      <GameCard game={game} lang={lang} client:visible />
+                    ))}
+                  </div>
+                  {games.length > 6 && (
+                    <div class="text-center mt-6">
+                      <a 
+                        href={`/${lang}/search?${new URLSearchParams({...Object.fromEntries(searchParams), view: 'grid'}).toString()}`}
+                        class="inline-block px-6 py-3 bg-white border border-gray-300 text-gray-900 font-bold rounded-xl hover:bg-gray-50 transition-colors text-sm"
+                      >
+                        {lang === 'en' ? `View all ${games.length} rooms` : `Ver las ${games.length} salas`}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <!-- Grid View -->
+            {games.length > 0 ? (
+              <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-8">
+                {games.map((game) => (
+                  <GameCard game={game} lang={lang} client:visible />
+                ))}
+              </div>
+            ) : (
+              <div class="text-center py-12 sm:py-20 bg-white rounded-xl sm:rounded-2xl border border-gray-200">
+                <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 flex items-center justify-center rounded-2xl bg-gray-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </div>
+                <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2">
+                  {lang === 'en' ? 'No rooms found' : 'No se encontraron salas'}
+                </h3>
+                <p class="text-sm sm:text-base text-gray-500 mb-6 px-4">
+                  {lang === 'en' ? 'Try adjusting your filters' : 'Prueba a ajustar los filtros'}
+                </p>
+                <a href={`/${lang}/search`} class="inline-block px-5 sm:px-6 py-2.5 sm:py-3 bg-tropical-primary text-white font-bold rounded-xl hover:bg-tropical-primary/90 active:bg-tropical-primary/80 transition-colors text-sm sm:text-base">
+                  {lang === 'en' ? 'Clear filters' : 'Limpiar filtros'}
+                </a>
+              </div>
+            )}
+          )}
+        </div>
+      </div>
+    </section>
+
+    <!-- Mobile Filters Modal -->
+    <div id="mobileFiltersModal" class="fixed inset-0 z-50 hidden">
+      <div class="absolute inset-0 bg-black/50" id="mobileFiltersOverlay"></div>
+      <div class="absolute left-0 right-0 bottom-0 top-16 bg-white rounded-t-3xl overflow-hidden" id="mobileFiltersContent">
+        <div class="h-full overflow-y-auto">
+          <!-- Drag Handle -->
+          <div class="sticky top-0 bg-white pt-3 pb-2 z-10">
+            <div class="w-10 h-1 bg-gray-300 rounded-full mx-auto"></div>
+          </div>
+          
+          <!-- Header -->
+          <div class="sticky top-6 bg-white px-4 pb-4 z-10 border-b border-gray-100">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-bold text-gray-900">{lang === 'en' ? 'Filters' : 'Filtros'}</h2>
+              <button id="closeMobileFilters" class="p-2 -mr-2 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Filters Content -->
+          <div class="p-4">
+            <AdvancedFilters
+              client:load
+              lang={lang}
+              initialFilters={initialFilters}
+              hideHeader={true}
+            />
+          </div>
+
+          <!-- Apply Button -->
+          <div class="sticky bottom-0 bg-white border-t border-gray-100 p-4" style="padding-bottom: env(safe-area-inset-bottom, 16px);">
+            <button id="applyMobileFilters" class="w-full py-3.5 bg-tropical-primary text-white font-bold rounded-xl active:scale-[0.98] transition-transform">
+              {lang === 'en' ? 'Show results' : 'Ver resultados'} ({resultsCount})
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  // Mobile Filter Modal
+  const mobileBtn = document.getElementById('mobileFilterBtn');
+  const mobileModal = document.getElementById('mobileFiltersModal');
+  const mobileOverlay = document.getElementById('mobileFiltersOverlay');
+  const closeBtn = document.getElementById('closeMobileFilters');
+  const applyBtn = document.getElementById('applyMobileFilters');
+
+  function openMobileFilters() {
+    mobileModal?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMobileFilters() {
+    mobileModal?.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+
+  mobileBtn?.addEventListener('click', openMobileFilters);
+  mobileOverlay?.addEventListener('click', closeMobileFilters);
+  closeBtn?.addEventListener('click', closeMobileFilters);
+  applyBtn?.addEventListener('click', closeMobileFilters);
+
+  // Sort Select
+  const sortSelect = document.getElementById('sortSelect') as HTMLSelectElement;
+  sortSelect?.addEventListener('change', (e) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set('sort', (e.target as HTMLSelectElement).value);
+    window.location.search = params.toString();
+  });
+</script>
+
+<style>
+  #mobileFiltersModal:not(.hidden) #mobileFiltersOverlay {
+    animation: fadeIn 0.2s ease-out;
+  }
+  
+  #mobileFiltersModal:not(.hidden) #mobileFiltersContent {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+</style>
+

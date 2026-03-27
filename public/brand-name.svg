@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1020 160" width="1020" height="160">
+  
+  <!-- E estilizada: cap-height Arial 115px = y52 a y135, stroke-width 16 offset = +8/-8 → path y60 a y127 -->
+  <path d="
+    M 28 60 L 28 127
+    M 28 60 L 72 60
+    M 28 93 L 65 93
+    M 28 127 L 72 127
+  " fill="none" stroke="#0097b2" stroke-width="16" stroke-linecap="round"/>
+  
+  <text x="84" y="135" font-family="Arial, Helvetica, sans-serif" font-size="115" font-weight="600" fill="#0097b2" letter-spacing="-2">scape</text>
+
+  <!-- M estilizada: misma cap-height -->
+  <path d="
+    M 470 127 L 470 76 C 470 54, 504 54, 504 76 L 504 127
+    M 504 76 C 504 54, 538 54, 538 76 L 538 127
+  " fill="none" stroke="#0097b2" stroke-width="16" stroke-linecap="round"/>
+  
+  <text x="550" y="135" font-family="Arial, Helvetica, sans-serif" font-size="115" font-weight="600" fill="#0097b2" letter-spacing="-2">aster</text>
+</svg>

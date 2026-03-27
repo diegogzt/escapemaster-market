@@ -1,0 +1,49 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { query } from '../../lib/db';
+
+const { lang = 'es' } = Astro.params;
+
+let content = '';
+try {
+    const { rows } = await query('SELECT value FROM platform_settings WHERE key = $1', ['privacy_policy_content']);
+    content = rows[0]?.value || '';
+} catch (_) {}
+
+const titles = {
+    es: 'Política de Privacidad',
+    en: 'Privacy Policy'
+};
+
+const title = titles[lang as keyof typeof titles] || titles.es;
+---
+
+<Layout title={title}>
+    <div class="max-w-4xl mx-auto px-6 py-16 lg:py-24">
+        <div class="mb-12">
+            <h1 class="text-5xl font-black text-tropical-primary tracking-tighter mb-4">{title}</h1>
+            <p class="text-tropical-text/60 text-lg">Última actualización: {new Date().toLocaleDateString(lang)}</p>
+        </div>
+
+        <div class="prose prose-sm max-w-none">
+            <div class="bg-white rounded-2xl p-8 shadow-sm border border-tropical-secondary/10">
+                {content ? (
+                    <div class="whitespace-pre-wrap text-tropical-text/80 leading-relaxed">
+                        {content}
+                    </div>
+                ) : (
+                    <div class="text-center py-12 text-tropical-text/40">
+                        <p class="text-lg font-semibold mb-2">Contenido no disponible</p>
+                        <p class="text-sm">La política de privacidad está siendo actualizada.</p>
+                    </div>
+                )}
+            </div>
+        </div>
+
+        <div class="mt-12 p-6 rounded-xl bg-tropical-primary/5 border border-tropical-primary/20">
+            <p class="text-sm text-tropical-text/60">
+                Si tienes preguntas sobre nuestra política de privacidad, <a href={`/${lang}/contacto`} class="text-tropical-primary font-bold hover:underline">contacta con nosotros</a>.
+            </p>
+        </div>
+    </div>
+</Layout>

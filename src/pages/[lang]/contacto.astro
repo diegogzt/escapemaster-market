@@ -1,0 +1,157 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { query } from '../../lib/db';
+import { Mail, Phone, MapPin, Send } from 'lucide-react';
+
+const { lang = 'es' } = Astro.params;
+
+let companyInfo: Record<string, string> = {};
+try {
+    const { rows } = await query(
+        `SELECT key, value FROM platform_settings WHERE key IN ('company_email', 'company_phone', 'company_address', 'company_name')`
+    );
+    for (const r of rows) companyInfo[r.key] = r.value;
+} catch (_) {}
+
+const email = companyInfo['company_email'] || 'info@escapemaster.es';
+const phone = companyInfo['company_phone'] || '+34 900 123 456';
+const address = companyInfo['company_address'] || 'Calle Principal 123, Madrid';
+const companyName = companyInfo['company_name'] || 'EscapeMaster';
+
+const titles = {
+    es: 'Contacto',
+    en: 'Contact Us'
+};
+
+const labels = {
+    es: {
+        title: 'Contacto',
+        subtitle: 'Ponte en contacto con nosotros',
+        form_title: 'Envíanos un Mensaje',
+        name: 'Nombre',
+        email_label: 'Email',
+        message: 'Mensaje',
+        send: 'Enviar',
+        hours: 'Disponibles de lunes a viernes, 9:00 - 18:00'
+    },
+    en: {
+        title: 'Contact Us',
+        subtitle: 'Get in touch with us',
+        form_title: 'Send us a Message',
+        name: 'Name',
+        email_label: 'Email',
+        message: 'Message',
+        send: 'Send',
+        hours: 'Available Monday to Friday, 9:00 AM - 6:00 PM'
+    }
+};
+
+const text = labels[lang as keyof typeof labels] || labels.es;
+const title = text.title;
+---
+
+<Layout title={title}>
+    <div class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
+        <div class="mb-16 text-center">
+            <h1 class="text-5xl font-black text-tropical-primary tracking-tighter mb-4">{text.title}</h1>
+            <p class="text-tropical-text/60 text-lg">{text.subtitle}</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+            <!-- Contact Info -->
+            <div class="space-y-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-tropical-primary mb-6">Información de Contacto</h2>
+                </div>
+
+                <div class="flex gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-tropical-primary/10 flex items-center justify-center shrink-0">
+                        <Mail className="w-6 h-6 text-tropical-primary" />
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-tropical-primary mb-1">Email</h3>
+                        <a href={`mailto:${email}`} class="text-tropical-primary font-semibold hover:underline">
+                            {email}
+                        </a>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-tropical-primary/10 flex items-center justify-center shrink-0">
+                        <Phone className="w-6 h-6 text-tropical-primary" />
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-tropical-primary mb-1">Teléfono</h3>
+                        <a href={`tel:${phone.replace(/\s/g, '')}`} class="text-tropical-primary font-semibold hover:underline">
+                            {phone}
+                        </a>
+                        <p class="text-sm text-tropical-text/60 mt-1">{text.hours}</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-tropical-primary/10 flex items-center justify-center shrink-0">
+                        <MapPin className="w-6 h-6 text-tropical-primary" />
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-tropical-primary mb-1">Dirección</h3>
+                        <p class="text-tropical-text/70">{address}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="bg-white rounded-2xl p-8 border border-tropical-secondary/10 shadow-sm">
+                <h3 class="text-xl font-bold text-tropical-primary mb-6">{text.form_title}</h3>
+                <form class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-tropical-primary mb-2">
+                            {text.name}
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            class="w-full px-4 py-3 rounded-xl border border-tropical-secondary/20 focus:outline-none focus:ring-2 focus:ring-tropical-primary"
+                            placeholder="Tu nombre"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-tropical-primary mb-2">
+                            {text.email_label}
+                        </label>
+                        <input
+                            type="email"
+                            required
+                            class="w-full px-4 py-3 rounded-xl border border-tropical-secondary/20 focus:outline-none focus:ring-2 focus:ring-tropical-primary"
+                            placeholder="tu@email.com"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-tropical-primary mb-2">
+                            {text.message}
+                        </label>
+                        <textarea
+                            required
+                            rows={5}
+                            class="w-full px-4 py-3 rounded-xl border border-tropical-secondary/20 focus:outline-none focus:ring-2 focus:ring-tropical-primary resize-none"
+                            placeholder="Tu mensaje..."
+                        ></textarea>
+                    </div>
+                    <button
+                        type="submit"
+                        class="w-full bg-tropical-primary text-white font-bold py-3 rounded-xl hover:bg-tropical-primary/90 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <Send className="w-4 h-4" />
+                        {text.send}
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="p-8 rounded-2xl bg-tropical-primary/5 border border-tropical-primary/20 text-center">
+            <p class="text-tropical-text/70">
+                Responderemos a tu mensaje lo antes posible. Gracias por contactar con {companyName}.
+            </p>
+        </div>
+    </div>
+</Layout>

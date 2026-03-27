@@ -1,0 +1,285 @@
+---
+export const prerender = false;
+import Layout from '../../../layouts/Layout.astro';
+import { pool } from '../../../lib/db';
+import { ui } from '../../../i18n/ui';
+
+const { lang = 'es' } = Astro.params;
+const t = ui[lang as keyof typeof ui] || ui.es;
+
+// Fetch available rooms for selection
+let rooms: any[] = [];
+try {
+  const result = await pool.query(`
+    SELECT r.id, r.name, r.city, r.image_url, r.duration_minutes,
+           r.difficulty_level, r.price_per_person, r.average_rating,
+           o.name as org_name
+    FROM rooms r
+    LEFT JOIN organizations o ON r.organization_id = o.id
+    WHERE r.is_active = true
+    ORDER BY r.average_rating DESC NULLS LAST
+    LIMIT 100
+  `);
+  rooms = result.rows;
+} catch (e) {
+  console.error('Error loading rooms:', e);
+}
+---
+
+<Layout title={`${lang === 'en' ? 'Create Route' : 'Crear Ruta'} | EscapeMaster`}>
+  <main class="pt-24 pb-32 sm:pb-16">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6">
+
+      <a href={`/${lang}/routes`} class="inline-flex items-center gap-2 text-sm font-semibold text-tropical-text/50 hover:text-tropical-primary mb-6 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        {lang === 'en' ? 'Back to Routes' : 'Volver a Rutas'}
+      </a>
+
+      <div class="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 shadow-sm mb-6">
+        <h1 class="text-2xl font-black text-tropical-text mb-2">
+          {lang === 'en' ? 'Create Your Route' : 'Crea Tu Ruta'}
+        </h1>
+        <p class="text-tropical-text/50 text-sm mb-8">
+          {lang === 'en' ? 'Select escape rooms and create your custom route' : 'Selecciona salas de escape y crea tu ruta personalizada'}
+        </p>
+
+        <form id="create-route-form" class="space-y-6">
+          <div>
+            <label class="block text-sm font-semibold text-tropical-text mb-2">
+              {lang === 'en' ? 'Route name' : 'Nombre de la ruta'} *
+            </label>
+            <input
+              type="text"
+              name="title"
+              required
+              placeholder={lang === 'en' ? 'My escape room adventure...' : 'Mi aventura de escape rooms...'}
+              class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-tropical-primary focus:ring-2 focus:ring-tropical-primary/20 outline-none transition-all text-sm"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-tropical-text mb-2">
+              {lang === 'en' ? 'Description' : 'Descripcion'}
+            </label>
+            <textarea
+              name="description"
+              rows="3"
+              placeholder={lang === 'en' ? 'Describe your route...' : 'Describe tu ruta...'}
+              class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-tropical-primary focus:ring-2 focus:ring-tropical-primary/20 outline-none transition-all text-sm resize-none"
+            ></textarea>
+          </div>
+
+          <!-- Selected rooms preview -->
+          <div>
+            <label class="block text-sm font-semibold text-tropical-text mb-2">
+              {lang === 'en' ? 'Selected rooms' : 'Salas seleccionadas'}
+              <span id="selected-count" class="text-tropical-primary ml-1">(0)</span>
+            </label>
+            <div id="selected-rooms" class="min-h-[60px] p-4 border-2 border-dashed border-gray-200 rounded-xl text-center text-sm text-gray-400">
+              {lang === 'en' ? 'No rooms selected yet. Pick rooms below.' : 'Aun no hay salas. Selecciona abajo.'}
+            </div>
+          </div>
+
+          <div id="form-error" class="hidden p-4 rounded-xl bg-red-50 text-red-700 text-sm font-medium"></div>
+          <div id="form-success" class="hidden p-4 rounded-xl bg-green-50 text-green-700 text-sm font-medium"></div>
+
+          <button
+            type="submit"
+            class="w-full py-3.5 rounded-xl bg-tropical-primary text-white font-bold hover:bg-tropical-primary/90 transition-colors shadow-lg shadow-tropical-primary/20"
+          >
+            {lang === 'en' ? 'Create Route' : 'Crear Ruta'}
+          </button>
+        </form>
+      </div>
+
+      <!-- Available rooms grid -->
+      <div>
+        <h2 class="text-lg font-bold text-tropical-text mb-4">
+          {lang === 'en' ? 'Available rooms' : 'Salas disponibles'}
+          <span class="text-sm font-normal text-gray-500 ml-2">({rooms.length})</span>
+        </h2>
+
+        <!-- Search filter -->
+        <div class="mb-4">
+          <input
+            type="text"
+            id="room-search"
+            placeholder={lang === 'en' ? 'Search rooms...' : 'Buscar salas...'}
+            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-tropical-primary focus:ring-2 focus:ring-tropical-primary/20 outline-none transition-all text-sm"
+          />
+        </div>
+
+        <div id="rooms-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {rooms.map((room) => (
+            <div
+              class="room-card group cursor-pointer bg-white border border-gray-200 rounded-xl p-4 hover:border-tropical-primary/50 hover:shadow-md transition-all"
+              data-room-id={room.id}
+              data-room-name={room.name}
+              data-room-city={room.city || ''}
+              data-room-image={room.image_url || ''}
+            >
+              <div class="flex gap-3">
+                {room.image_url ? (
+                  <img src={room.image_url} alt={room.name} class="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                ) : (
+                  <div class="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                  </div>
+                )}
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-bold text-sm text-tropical-text truncate">{room.name}</h3>
+                  <p class="text-xs text-gray-500">{room.city || 'Espana'} {room.org_name ? `· ${room.org_name}` : ''}</p>
+                  <div class="flex items-center gap-2 mt-1">
+                    {room.average_rating > 0 && (
+                      <span class="text-xs font-semibold text-yellow-600">{parseFloat(room.average_rating).toFixed(1)}</span>
+                    )}
+                    {room.duration_minutes && (
+                      <span class="text-xs text-gray-400">{room.duration_minutes}min</span>
+                    )}
+                    {room.price_per_person && (
+                      <span class="text-xs text-gray-400">{parseFloat(room.price_per_person).toFixed(0)}€/pers</span>
+                    )}
+                  </div>
+                </div>
+                <div class="room-check hidden flex-shrink-0 w-6 h-6 bg-tropical-primary rounded-full flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  const selectedRoomIds: string[] = [];
+  const selectedRoomsEl = document.getElementById('selected-rooms')!;
+  const selectedCountEl = document.getElementById('selected-count')!;
+  const roomCards = document.querySelectorAll('.room-card');
+  const searchInput = document.getElementById('room-search') as HTMLInputElement;
+
+  function updateSelectedDisplay() {
+    selectedCountEl.textContent = `(${selectedRoomIds.length})`;
+    if (selectedRoomIds.length === 0) {
+      const lang = window.location.pathname.split('/')[1] || 'es';
+      selectedRoomsEl.innerHTML = `<p class="text-gray-400 text-sm">${lang === 'en' ? 'No rooms selected yet.' : 'Aun no hay salas seleccionadas.'}</p>`;
+      return;
+    }
+    const items = selectedRoomIds.map((id, i) => {
+      const card = document.querySelector(`[data-room-id="${id}"]`);
+      const name = card?.getAttribute('data-room-name') || 'Sala';
+      const city = card?.getAttribute('data-room-city') || '';
+      return `<div class="flex items-center gap-2 bg-tropical-card px-3 py-2 rounded-lg">
+        <span class="w-6 h-6 bg-tropical-primary text-white rounded-full text-xs font-bold flex items-center justify-center">${i + 1}</span>
+        <span class="text-sm font-semibold text-tropical-text truncate">${name}</span>
+        <span class="text-xs text-gray-400">${city}</span>
+        <button class="ml-auto text-gray-400 hover:text-red-500 remove-room" data-id="${id}">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>`;
+    });
+    selectedRoomsEl.innerHTML = `<div class="space-y-2">${items.join('')}</div>`;
+
+    // Attach remove handlers
+    selectedRoomsEl.querySelectorAll('.remove-room').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = (btn as HTMLElement).dataset.id!;
+        const idx = selectedRoomIds.indexOf(id);
+        if (idx > -1) selectedRoomIds.splice(idx, 1);
+        const card = document.querySelector(`[data-room-id="${id}"]`);
+        card?.classList.remove('border-tropical-primary', 'bg-tropical-card/30');
+        card?.querySelector('.room-check')?.classList.add('hidden');
+        updateSelectedDisplay();
+      });
+    });
+  }
+
+  roomCards.forEach(card => {
+    card.addEventListener('click', () => {
+      const id = (card as HTMLElement).dataset.roomId!;
+      const idx = selectedRoomIds.indexOf(id);
+      if (idx > -1) {
+        selectedRoomIds.splice(idx, 1);
+        card.classList.remove('border-tropical-primary', 'bg-tropical-card/30');
+        card.querySelector('.room-check')?.classList.add('hidden');
+      } else {
+        selectedRoomIds.push(id);
+        card.classList.add('border-tropical-primary', 'bg-tropical-card/30');
+        card.querySelector('.room-check')?.classList.remove('hidden');
+      }
+      updateSelectedDisplay();
+    });
+  });
+
+  // Search filter
+  searchInput?.addEventListener('input', () => {
+    const query = searchInput.value.toLowerCase();
+    roomCards.forEach(card => {
+      const name = (card as HTMLElement).dataset.roomName?.toLowerCase() || '';
+      const city = (card as HTMLElement).dataset.roomCity?.toLowerCase() || '';
+      const match = name.includes(query) || city.includes(query);
+      (card as HTMLElement).style.display = match ? '' : 'none';
+    });
+  });
+
+  // Form submit
+  const form = document.getElementById('create-route-form') as HTMLFormElement;
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById('form-error')!;
+    const successEl = document.getElementById('form-success')!;
+    errorEl.classList.add('hidden');
+    successEl.classList.add('hidden');
+
+    const token = localStorage.getItem('em_token');
+    if (!token) {
+      errorEl.textContent = 'Debes iniciar sesion para crear una ruta';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+
+    if (selectedRoomIds.length === 0) {
+      errorEl.textContent = 'Selecciona al menos una sala';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+
+    const formData = new FormData(form);
+    const data = {
+      title: formData.get('title'),
+      description: formData.get('description'),
+      room_ids: selectedRoomIds,
+    };
+
+    try {
+      const res = await fetch('/api/routes/user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(data),
+      });
+
+      if (res.ok) {
+        successEl.textContent = 'Ruta creada con exito! Redirigiendo...';
+        successEl.classList.remove('hidden');
+        const lang = window.location.pathname.split('/')[1] || 'es';
+        setTimeout(() => { window.location.href = `/${lang}/routes`; }, 1500);
+      } else {
+        const err = await res.json();
+        errorEl.textContent = err.error || 'Error al crear la ruta';
+        errorEl.classList.remove('hidden');
+      }
+    } catch {
+      errorEl.textContent = 'Error de conexion. Intentalo de nuevo.';
+      errorEl.classList.remove('hidden');
+    }
+  });
+</script>
+
+<style>
+  .room-card.border-tropical-primary .room-check {
+    display: flex !important;
+  }
+</style>

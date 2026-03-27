@@ -1,0 +1,300 @@
+---
+export const prerender = false;
+import { query, pool } from '../../../lib/db';
+import '../../../styles/global.css';
+import { ui } from '../../../i18n/ui';
+import Layout from '../../../layouts/Layout.astro';
+
+const { lang, id } = Astro.params;
+const t = (key: keyof typeof ui['es']) => ui[lang as keyof typeof ui]?.[key] || key;
+
+// Get listing
+let listing: any = null;
+let errorMessage = '';
+
+try {
+  const result = await query(`
+    SELECT 
+      ml.*,
+      r.name as room_name,
+      r.image_url as room_image,
+      r.city as room_city,
+      r.address as room_address,
+      r.duration_minutes,
+      r.lat,
+      r.lng,
+      r.description as room_description,
+      b.start_time,
+      b.end_time,
+      b.num_people,
+      b.status as booking_status,
+      o.name as organization_name,
+      o.id as organization_id,
+      u.full_name as seller_name,
+      u.avatar_url as seller_avatar,
+      u.id as seller_id
+    FROM marketplace_listings ml
+    JOIN bookings b ON b.id = ml.booking_id
+    JOIN rooms r ON r.id = b.room_id
+    JOIN organizations o ON o.id = r.organization_id
+    JOIN users u ON u.id = ml.seller_id
+    WHERE ml.id = $1
+  `, [id]);
+
+  if (result.rows.length > 0) {
+    listing = result.rows[0];
+    
+    // Hide full seller info for privacy
+    if (listing.seller_name) {
+      const nameParts = listing.seller_name.split(' ');
+      listing.seller_name_display = nameParts[0] + (nameParts[1] ? ' ' + nameParts[1][0] + '.' : '');
+    }
+  }
+} catch (error) {
+  console.error('Error fetching listing:', error);
+  errorMessage = 'Error loading listing';
+}
+
+if (!listing) {
+  return Astro.redirect(`/${lang}/marketplace?error=not_found`);
+}
+---
+
+<Layout title={`${listing.title || listing.room_name} | ${lang === 'en' ? 'Marketplace' : 'Mercadillo'}`}>
+  <main class="min-h-screen bg-tropical-bg pb-20">
+    <!-- Back Button -->
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 pt-4">
+      <a 
+        href={`/${lang}/marketplace`}
+        class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+        {lang === 'en' ? 'Back to marketplace' : 'Volver al mercadillo'}
+      </a>
+    </div>
+
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Room Image -->
+          <div class="bg-white rounded-2xl overflow-hidden shadow-sm">
+            {listing.room_image ? (
+              <img 
+                src={listing.room_image} 
+                alt={listing.room_name}
+                class="w-full aspect-video object-cover"
+              />
+            ) : (
+              <div class="w-full aspect-video bg-gradient-to-br from-tropical-primary/20 to-tropical-secondary/20 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="text-tropical-primary/40">
+                  <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+                </svg>
+              </div>
+            )}
+          </div>
+
+          <!-- Room Info -->
+          <div class="bg-white rounded-2xl p-6 shadow-sm">
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <h1 class="text-2xl font-bold text-gray-900 mb-1">
+                  {listing.room_name}
+                </h1>
+                <p class="text-gray-600">{listing.organization_name}</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+              <div class="bg-gray-50 rounded-xl p-3 text-center">
+                <div class="text-lg font-bold text-tropical-primary">
+                  {new Date(listing.start_time).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                </div>
+                <div class="text-xs text-gray-500">{lang === 'en' ? 'Date' : 'Fecha'}</div>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-3 text-center">
+                <div class="text-lg font-bold text-tropical-primary">
+                  {new Date(listing.start_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                </div>
+                <div class="text-xs text-gray-500">{lang === 'en' ? 'Time' : 'Hora'}</div>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-3 text-center">
+                <div class="text-lg font-bold text-tropical-primary">{listing.duration_minutes}</div>
+                <div class="text-xs text-gray-500">{lang === 'en' ? 'Minutes' : 'Minutos'}</div>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-3 text-center">
+                <div class="text-lg font-bold text-tropical-primary">{listing.num_people}</div>
+                <div class="text-xs text-gray-500">{lang === 'en' ? 'Players' : 'Jugadores'}</div>
+              </div>
+            </div>
+
+            <!-- Location -->
+            <div class="flex items-center gap-2 text-gray-600 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              {listing.room_address}, {listing.room_city}
+            </div>
+
+            <!-- Description -->
+            {listing.description && (
+              <div class="border-t border-gray-100 pt-4">
+                <h3 class="font-bold text-gray-900 mb-2">
+                  {lang === 'en' ? 'Description' : 'Descripción'}
+                </h3>
+                <p class="text-gray-600">{listing.description}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <!-- Sidebar - Purchase Card -->
+        <div class="lg:col-span-1">
+          <div class="bg-white rounded-2xl p-6 shadow-lg sticky top-4">
+            <!-- Price -->
+            <div class="text-center mb-6">
+              <div class="text-sm text-gray-500 mb-1">
+                {lang === 'en' ? 'Ticket Price' : 'Precio de la entrada'}
+              </div>
+              <div class="text-4xl font-bold text-gray-900">
+                {listing.price.toFixed(2)}€
+              </div>
+              {listing.price < listing.original_price && (
+                <div class="flex items-center justify-center gap-2 mt-2">
+                  <span class="text-sm text-gray-400 line-through">
+                    {listing.original_price.toFixed(2)}€
+                  </span>
+                  <span class="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                    -{((1 - listing.price / listing.original_price) * 100).toFixed(0)}%
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <!-- Seller Info -->
+            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl mb-6">
+              <div class="w-10 h-10 rounded-full bg-tropical-primary/20 flex items-center justify-center text-tropical-primary font-bold">
+                {listing.seller_name_display?.charAt(0) || 'U'}
+              </div>
+              <div class="flex-1">
+                <div class="text-sm font-medium text-gray-900">
+                  {listing.seller_name_display}
+                </div>
+                <div class="text-xs text-gray-500">
+                  {lang === 'en' ? 'Seller' : 'Vendedor'}
+                </div>
+              </div>
+              <button 
+                id="contactSellerBtn"
+                data-seller-id={listing.seller_id}
+                class="p-2 text-tropical-primary hover:bg-tropical-primary/10 rounded-lg transition-colors"
+                title={lang === 'en' ? 'Contact seller' : 'Contactar vendedor'}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Expiry -->
+            <div class="text-center text-sm text-gray-500 mb-4">
+              {lang === 'en' ? 'Expires on' : 'Expira el'} {new Date(listing.expires_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </div>
+
+            <!-- Buy Button -->
+            <button 
+              id="buyBtn"
+              class="w-full py-4 bg-tropical-accent text-white font-bold rounded-xl hover:bg-tropical-accent/90 active:scale-[0.98] transition-all text-lg"
+            >
+              {lang === 'en' ? 'Buy Now' : 'Comprar Ahora'}
+            </button>
+
+            <p class="text-center text-xs text-gray-500 mt-4">
+              {lang === 'en' 
+                ? 'Secure payment via Stripe. The ticket will be transferred to your account after purchase.'
+                : 'Pago seguro con Stripe. La entrada se transferirá a tu cuenta después de la compra.'
+              }
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script define:vars={{ lang, listingId: id, sellerId: listing?.seller_id }}>
+  const buyBtn = document.getElementById('buyBtn');
+  const contactBtn = document.getElementById('contactSellerBtn');
+
+  // Check if user is logged in
+  const token = localStorage.getItem('em_token');
+  
+  if (!token) {
+    buyBtn?.addEventListener('click', () => {
+      window.location.href = `/${lang}/login?redirect=/${lang}/marketplace/${listingId}`;
+    });
+  } else {
+    buyBtn?.addEventListener('click', async () => {
+      buyBtn.disabled = true;
+      buyBtn.textContent = lang === 'en' ? 'Processing...' : 'Procesando...';
+      
+      try {
+        const response = await fetch(`/api/marketplace/${listingId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          alert(lang === 'en' ? 'Purchase completed successfully!' : '¡Compra realizada con éxito!');
+          window.location.href = `/${lang}/profile/history`;
+        } else {
+          alert(data.error || (lang === 'en' ? 'Purchase failed' : 'Error en la compra'));
+          buyBtn.disabled = false;
+          buyBtn.textContent = lang === 'en' ? 'Buy Now' : 'Comprar Ahora';
+        }
+      } catch (error) {
+        console.error('Purchase error:', error);
+        alert(lang === 'en' ? 'Purchase failed' : 'Error en la compra');
+        buyBtn.disabled = false;
+        buyBtn.textContent = lang === 'en' ? 'Buy Now' : 'Comprar Ahora';
+      }
+    });
+  }
+
+  // Contact seller
+  contactBtn?.addEventListener('click', async () => {
+    if (!token) {
+      window.location.href = `/${lang}/login?redirect=/${lang}/marketplace/${listingId}`;
+      return;
+    }
+
+    try {
+      // Create or get conversation with seller
+      const response = await fetch('/api/chat/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          participantId: sellerId,
+          initialMessage: lang === 'en' 
+            ? `Hi! I'm interested in buying the ticket for ${listingId}`
+            : `¡Hola! Estoy interesado en comprar la entrada.`
+        })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.conversationId) {
+        window.location.href = `/${lang}/chat?conversation=${data.conversationId}`;
+      } else {
+        alert(data.error || (lang === 'en' ? 'Error starting conversation' : 'Error al iniciar conversación'));
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      alert(lang === 'en' ? 'Error starting conversation' : 'Error al iniciar conversación');
+    }
+  });
+</script>

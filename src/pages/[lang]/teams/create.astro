@@ -1,0 +1,134 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { ui } from '../../../i18n/ui';
+
+const { lang = 'es' } = Astro.params;
+const t = ui[lang as keyof typeof ui] || ui.es;
+---
+
+<Layout title={`${t['teams.create']} | EscapeMaster`}>
+  <main class="pt-24 pb-32 sm:pb-16">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6">
+      
+      <a href={`/${lang}/teams`} class="inline-flex items-center gap-2 text-sm font-semibold text-tropical-text/50 hover:text-tropical-primary mb-6 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        Volver a Equipos
+      </a>
+
+      <div class="bg-white rounded-2xl border border-gray-100 p-6 sm:p-8 shadow-sm">
+        <h1 class="text-2xl font-black text-tropical-text mb-2">{t['teams.create']}</h1>
+        <p class="text-tropical-text/50 text-sm mb-8">Crea un equipo para jugar escape rooms con tus amigos</p>
+
+        <form id="create-team-form" class="space-y-6">
+          <div>
+            <label class="block text-sm font-semibold text-tropical-text mb-2">Nombre del equipo *</label>
+            <input 
+              type="text" 
+              name="name" 
+              required
+              placeholder="Los Escapistas..."
+              class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-tropical-primary focus:ring-2 focus:ring-tropical-primary/20 outline-none transition-all text-sm"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-tropical-text mb-2">Lema del equipo</label>
+            <input 
+              type="text" 
+              name="motto" 
+              placeholder="Ninguna sala se nos resiste..."
+              class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-tropical-primary focus:ring-2 focus:ring-tropical-primary/20 outline-none transition-all text-sm"
+            />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-tropical-text mb-2">Descripción</label>
+            <textarea 
+              name="description" 
+              rows="3"
+              placeholder="Cuéntanos sobre tu equipo..."
+              class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-tropical-primary focus:ring-2 focus:ring-tropical-primary/20 outline-none transition-all text-sm resize-none"
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-tropical-text mb-2">Visibilidad</label>
+            <div class="flex gap-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="is_public" value="true" checked class="w-4 h-4 text-tropical-primary focus:ring-tropical-primary" />
+                <span class="text-sm">{t['teams.public']} — cualquiera puede encontrar y unirse</span>
+              </label>
+            </div>
+            <div class="flex gap-4 mt-2">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="is_public" value="false" class="w-4 h-4 text-tropical-primary focus:ring-tropical-primary" />
+                <span class="text-sm">{t['teams.private']} — solo por invitación</span>
+              </label>
+            </div>
+          </div>
+
+          <div id="form-error" class="hidden p-4 rounded-xl bg-red-50 text-red-700 text-sm font-medium"></div>
+          <div id="form-success" class="hidden p-4 rounded-xl bg-green-50 text-green-700 text-sm font-medium"></div>
+
+          <button 
+            type="submit"
+            class="w-full py-3.5 rounded-xl bg-tropical-primary text-white font-bold hover:bg-tropical-primary/90 transition-colors shadow-lg shadow-tropical-primary/20"
+          >
+            Crear Equipo
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  const form = document.getElementById('create-team-form') as HTMLFormElement;
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorEl = document.getElementById('form-error')!;
+    const successEl = document.getElementById('form-success')!;
+    errorEl.classList.add('hidden');
+    successEl.classList.add('hidden');
+
+    const token = localStorage.getItem('em_token');
+    if (!token) {
+      errorEl.textContent = 'Debes iniciar sesión para crear un equipo';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+
+    const formData = new FormData(form);
+    const data = {
+      name: formData.get('name'),
+      motto: formData.get('motto'),
+      description: formData.get('description'),
+      is_public: formData.get('is_public') === 'true'
+    };
+
+    try {
+      const res = await fetch('/api/teams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        successEl.textContent = '¡Equipo creado con éxito! Redirigiendo...';
+        successEl.classList.remove('hidden');
+        setTimeout(() => {
+          const lang = window.location.pathname.split('/')[1] || 'es';
+          window.location.href = `/${lang}/teams/${result.id}`;
+        }, 1500);
+      } else {
+        const err = await res.json();
+        errorEl.textContent = err.error || 'Error al crear el equipo';
+        errorEl.classList.remove('hidden');
+      }
+    } catch {
+      errorEl.textContent = 'Error de conexión. Inténtalo de nuevo.';
+      errorEl.classList.remove('hidden');
+    }
+  });
+</script>

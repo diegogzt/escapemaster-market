@@ -1,0 +1,172 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { pool } from '../../../lib/db';
+import { ui } from '../../../i18n/ui';
+import RouteCard from '../../../components/routes/RouteCard.astro';
+
+const { lang = 'es' } = Astro.params;
+const t = ui[lang as keyof typeof ui] || ui.es;
+
+let collections: any[] = [];
+try {
+  const result = await pool.query(`
+    SELECT c.*, 
+      COUNT(cr.id) as room_count,
+      ROUND(AVG(r.average_rating), 1) as avg_rating
+    FROM curated_collections c
+    LEFT JOIN collection_rooms cr ON cr.collection_id = c.id
+    LEFT JOIN rooms r ON r.id = cr.room_id AND r.is_active = true
+    WHERE c.is_active = true
+    GROUP BY c.id
+    HAVING COUNT(cr.id) > 0
+    ORDER BY c.is_featured DESC, c.display_order ASC
+  `);
+  collections = result.rows;
+} catch (e) {
+  console.error('Error loading routes:', e);
+}
+
+const featured = collections.filter((c: any) => c.is_featured);
+const heroCollection = featured[0];
+const secondaryFeatured = featured.slice(1, 3);
+const remainingCollections = collections.filter(c => !featured.includes(c) || featured.indexOf(c) > 2);
+
+// Reusable Icon Logic (matches RouteCard)
+const getRouteIcon = (slug: string) => {
+  if (slug.includes('terror') || slug.includes('valientes')) 
+    return `<path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.5" fill="white" stroke="none"/>`;
+  if (slug.includes('principiantes') || slug.includes('familia')) 
+    return `<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>`;
+  if (slug.includes('mejor') || slug.includes('valorad')) 
+    return `<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>`;
+  if (slug.includes('madrid') || slug.includes('barcelona') || slug.includes('sur')) 
+    return `<path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7"/>`;
+  if (slug.includes('grupo')) 
+    return `<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 8v8"/><path d="M8 12h8"/>`;
+  return `<path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7"/>`;
+};
+---
+
+<Layout title={`${t['routes.title']} | EscapeMaster`}>
+  <main class="pt-24 sm:pt-32 pb-32 sm:pb-16 bg-tropical-bg overflow-x-hidden">
+    
+    <!-- Clean Tropical Hero -->
+    {heroCollection && (
+      <section class="relative min-h-[50vh] flex items-center overflow-hidden bg-white border-b border-gray-100">
+        <div class="relative w-full max-w-7xl mx-auto px-4 sm:px-6 py-20 flex flex-col lg:flex-row items-center gap-12">
+          <div class="flex-1 text-center lg:text-left">
+            <div class="inline-flex items-center gap-2 px-3 py-1 bg-tropical-primary/10 rounded-full mb-6">
+              <span class="w-2 h-2 rounded-full bg-tropical-primary"></span>
+              <span class="text-[10px] font-black tracking-[0.2em] uppercase text-tropical-primary">
+                {lang === 'en' ? 'CURATED FOR YOU' : 'CURADO PARA TI'}
+              </span>
+            </div>
+            
+            <h1 class="text-5xl sm:text-6xl lg:text-7xl font-black text-tropical-text leading-[1] mb-6">
+              {t['routes.title']}
+            </h1>
+            
+            <p class="text-lg sm:text-xl text-tropical-text/60 leading-relaxed max-w-xl mx-auto lg:mx-0 mb-8">
+              {t['routes.subtitle']}
+            </p>
+            
+            <div class="flex flex-wrap justify-center lg:justify-start gap-4">
+              <a 
+                href={`/${lang}/routes/${heroCollection.slug}`}
+                class="group flex items-center gap-3 bg-tropical-primary text-white font-black px-8 py-4 rounded-xl hover:bg-tropical-primary/90 transition-all shadow-lg hover:shadow-tropical-primary/25"
+              >
+                {t['routes.view']}
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M5 12h14m-7-7l7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+          
+          <div class="flex-1 w-full max-w-xl lg:max-w-none">
+            <div class="relative rounded-[2rem] overflow-hidden shadow-2xl bg-white border-8 border-white group">
+              <img 
+                src={heroCollection.cover_image_url || 'https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=1200'} 
+                alt={heroCollection.title}
+                class="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform duration-700"
+                onerror="this.src='https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=1200'; this.onerror=null;"
+              />
+              <div class="absolute bottom-6 left-6 right-6 p-6 bg-white/90 backdrop-blur-md rounded-2xl border border-gray-100 shadow-xl">
+                 <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-tropical-text font-black text-lg leading-tight mb-1">{heroCollection.title}</p>
+                      <p class="text-tropical-text/50 text-xs font-bold uppercase tracking-widest">{heroCollection.room_count} {t['routes.rooms']}</p>
+                    </div>
+                    <div 
+                      class="w-10 h-10 rounded-xl flex items-center justify-center" 
+                      style={`background-color: ${(heroCollection.theme_color || '#0097b2')}20`}
+                    >
+                       <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke={heroCollection.theme_color || '#0097b2'} stroke-width="2.5" set:html={getRouteIcon(heroCollection.slug)} />
+                    </div>
+                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- Secondary featured grid -->
+    {secondaryFeatured.length > 0 && (
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 my-16">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          {secondaryFeatured.map((collection: any) => (
+            <a 
+              href={`/${lang}/routes/${collection.slug}`} 
+              class="group relative aspect-[21/9] rounded-[2rem] overflow-hidden shadow-lg bg-white border border-gray-100 flex items-center"
+            >
+              <div class="w-1/2 h-full overflow-hidden">
+                <img 
+                  src={collection.cover_image_url || 'https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=800'} 
+                  alt={collection.title}
+                  class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
+                  onerror="this.src='https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=800'; this.onerror=null;"
+                />
+              </div>
+              <div class="w-1/2 p-8">
+                <span class="inline-block px-2 py-0.5 rounded bg-tropical-primary/10 text-tropical-primary text-[10px] font-black uppercase tracking-wider mb-4">
+                  {t['routes.featured']}
+                </span>
+                <h3 class="text-2xl font-black text-tropical-text mb-2 leading-tight group-hover:text-tropical-primary transition-colors">
+                  {collection.title}
+                </h3>
+                <p class="text-sm text-gray-400 font-bold uppercase tracking-widest">{collection.room_count} {t['routes.rooms']}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- All Routes Grid -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 mb-20">
+      <div class="mb-12">
+          <h2 class="text-4xl font-black text-tropical-text leading-none">
+            {lang === 'en' ? 'Explore the collection' : 'Explora la colección'}
+          </h2>
+          <div class="w-20 h-2 bg-tropical-primary mt-6 rounded-full"></div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {collections.map((collection: any) => (
+          <RouteCard collection={collection} lang={lang} t={t} />
+        ))}
+      </div>
+    </section>
+
+    {collections.length === 0 && (
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 pt-32">
+        <div class="text-center py-32 rounded-[2rem] bg-gray-50 border border-dashed border-gray-200">
+          <div class="w-20 h-20 mx-auto mb-8 rounded-[2rem] bg-white shadow-xl flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0 0 21 18.382V7.618a1 1 0 0 0-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+          </div>
+          <h3 class="text-2xl font-black text-gray-900 mb-3">{lang === 'en' ? 'No routes found' : 'No se encontraron rutas'}</h3>
+          <p class="text-gray-500 max-w-xs mx-auto">{lang === 'en' ? 'Wait for our curators to add more amazing content.' : 'Espera a que nuestros curadores añadan más contenido increíble.'}</p>
+        </div>
+      </section>
+    )}
+  </main>
+</Layout>

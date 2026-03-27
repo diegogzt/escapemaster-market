@@ -1,0 +1,991 @@
+---
+import BareLayout from '../../layouts/BareLayout.astro';
+
+const { lang = 'es' } = Astro.params;
+
+const meta = {
+  es: {
+    title: 'EscapeMaster Manager — Gestor de Reservas Inteligente',
+    description: 'El gestor de reservas más inteligente para escape rooms. Diseño minimalista, máxima eficiencia.',
+  },
+  en: {
+    title: 'EscapeMaster Manager — Smart Booking Manager',
+    description: 'The smartest booking manager for escape rooms. Minimalist design, maximum efficiency.',
+  },
+};
+
+const t = meta[lang as keyof typeof meta] || meta.es;
+---
+
+<BareLayout title={t.title}>
+  <meta slot="head" name="description" content={t.description} />
+  <meta slot="head" property="og:title" content={t.title} />
+  <meta slot="head" property="og:description" content={t.description} />
+  
+  <!-- Custom Fonts from Google Fonts for Technical SaaS Look -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" slot="head">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin slot="head">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Space+Grotesk:wght@300;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" slot="head">
+
+  <style is:global>
+    :root {
+      /* B2B Enterprise / Minimalist technical color palette (Default: Marketplace Blue) */
+      --tech-bg: #FFFFFF;
+      --tech-surface: #F8FAFC;
+      --tech-border: rgba(0, 151, 178, 0.15);
+      --tech-border-hover: rgba(0, 151, 178, 0.4);
+      --tech-text: #0F172A;
+      --tech-text-muted: #64748B;
+      --tech-accent: #0097b2;
+      
+      --font-display: 'Syne', sans-serif;
+      --font-grotesk: 'Space Grotesk', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    body {
+      background-color: var(--tech-bg);
+      color: var(--tech-text);
+      font-family: var(--font-grotesk);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background-color 0.4s ease, color 0.4s ease;
+    }
+
+    /* Dynamic Border colors for themes */
+    .theme-border { border-color: var(--tech-border); transition: border-color 0.4s ease; }
+    .theme-border-accent { border-color: var(--tech-accent); transition: border-color 0.4s ease; }
+
+    /* Core typography classes for easy reuse */
+    .font-display { font-family: var(--font-display); }
+    .font-mono { font-family: var(--font-mono); }
+    
+    /* Technical / Blueprint Dot Grid Background */
+    .bg-dot-grid {
+      background-image: radial-gradient(var(--tech-border) 1px, transparent 1px);
+      background-size: 24px 24px;
+      background-position: center center;
+    }
+    
+    .bg-dot-grid-dense {
+      background-image: radial-gradient(var(--tech-border) 1px, transparent 1px);
+      background-size: 12px 12px;
+    }
+
+    /* Blueprint Framing / Borders */
+    .blueprint-frame {
+      border: 1px solid var(--tech-border);
+      background-color: var(--tech-bg);
+      position: relative;
+    }
+    
+    .blueprint-frame::before, .blueprint-frame::after {
+      content: '';
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: var(--tech-accent);
+      transition: background-color 0.4s ease;
+    }
+    .blueprint-frame::before { top: -2px; left: -2px; }
+    .blueprint-frame::after { bottom: -2px; right: -2px; }
+
+    /* Technical Card Hover Effects */
+    .tech-card {
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      border: 1px solid var(--tech-border);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+      background-color: var(--tech-bg);
+    }
+    .tech-card:hover {
+      border-color: var(--tech-accent);
+      box-shadow: 4px 4px 0px var(--tech-accent);
+      transform: translate(-2px, -2px);
+    }
+
+    /* Dynamic overrides for hardcoded black/white elements */
+    .bg-dynamic-accent { background-color: var(--tech-accent); color: var(--tech-bg); }
+    .bg-dynamic-surface { background-color: var(--tech-surface); }
+    .text-dynamic-accent { color: var(--tech-accent); }
+    .text-dynamic-bg { color: var(--tech-bg); }
+    .border-dynamic-accent { border-color: var(--tech-accent); }
+
+    /* Animations — staggered reveal system (inspired by flutter-animations skill) */
+    .reveal-up {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .reveal-up.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-scale {
+      opacity: 0;
+      transform: scale(0.92);
+      transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .reveal-scale.is-visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .reveal-left {
+      opacity: 0;
+      transform: translateX(-40px);
+      transition: opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .reveal-left.is-visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .reveal-right {
+      opacity: 0;
+      transform: translateX(40px);
+      transition: opacity 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .reveal-right.is-visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* Micro-animations */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+    .animate-float { animation: float 3s ease-in-out infinite; }
+
+    @keyframes pulse-border {
+      0%, 100% { border-color: var(--tech-accent); }
+      50% { border-color: var(--tech-border); }
+    }
+    .animate-pulse-border { animation: pulse-border 2s ease-in-out infinite; }
+
+    /* details/summary FAQ styling */
+    details summary::-webkit-details-marker { display: none; }
+    details summary::marker { display: none; }
+
+    /* Line icons/Wireframe style overrides */
+    .wireframe-stroke {
+      stroke: var(--tech-accent);
+      stroke-width: 1.5;
+      fill: none;
+      transition: stroke 0.4s ease;
+    }
+  </style>
+
+  <div id="manager-landing" class="selection:bg-dynamic-accent selection:text-dynamic-bg pb-0">
+    <script>
+      // Smooth scroll
+      document.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const anchor = target.closest('a[href^="#"]');
+        if (anchor) {
+          e.preventDefault();
+          const id = anchor.getAttribute('href')?.slice(1);
+          if (id) {
+            document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      });
+
+      // Intersection Observer for reveal animations
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+          }
+        });
+      }, { threshold: 0.1 });
+
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.reveal-up, .reveal-scale, .reveal-left, .reveal-right').forEach(el => observer.observe(el));
+      });
+
+      // Theming Engine Logic - Brand Kit Palettes 
+      const themeConfigs = {
+        'mono': {
+          '--tech-bg': '#FFFFFF', '--tech-surface': '#FAFAFA', '--tech-border': 'rgba(0, 0, 0, 0.08)', '--tech-border-hover': 'rgba(0, 0, 0, 0.2)', '--tech-text': '#111111', '--tech-text-muted': '#666666', '--tech-accent': '#000000'
+        },
+        'default': {
+          '--tech-bg': '#FFFFFF', '--tech-surface': '#F8FAFC', '--tech-border': 'rgba(0, 151, 178, 0.15)', '--tech-border-hover': 'rgba(0, 151, 178, 0.4)', '--tech-text': '#0F172A', '--tech-text-muted': '#64748B', '--tech-accent': '#0097b2'
+        },
+        'tropical': {
+          '--tech-bg': '#0d3d34', '--tech-surface': '#114f43', '--tech-border': 'rgba(31, 99, 87, 0.3)', '--tech-border-hover': 'rgba(31, 99, 87, 0.6)', '--tech-text': '#FAFAFA', '--tech-text-muted': '#A3A3A3', '--tech-accent': '#1f6357'
+        },
+        'twilight': {
+          '--tech-bg': '#111827', '--tech-surface': '#1f2937', '--tech-border': 'rgba(67, 56, 202, 0.3)', '--tech-border-hover': 'rgba(67, 56, 202, 0.6)', '--tech-text': '#FAFAFA', '--tech-text-muted': '#A3A3A3', '--tech-accent': '#4338ca'
+        },
+        'vista': {
+          '--tech-bg': '#2a0f08', '--tech-surface': '#3d160c', '--tech-border': 'rgba(213, 106, 52, 0.3)', '--tech-border-hover': 'rgba(213, 106, 52, 0.6)', '--tech-text': '#FAFAFA', '--tech-text-muted': '#A3A3A3', '--tech-accent': '#d56a34'
+        },
+        'mint': {
+          '--tech-bg': '#163d39', '--tech-surface': '#1e524d', '--tech-border': 'rgba(31, 117, 110, 0.3)', '--tech-border-hover': 'rgba(31, 117, 110, 0.6)', '--tech-text': '#FAFAFA', '--tech-text-muted': '#A3A3A3', '--tech-accent': '#1f756e'
+        },
+        'sunset': {
+          '--tech-bg': '#2a1118', '--tech-surface': '#3b1822', '--tech-border': 'rgba(255, 107, 157, 0.3)', '--tech-border-hover': 'rgba(255, 107, 157, 0.6)', '--tech-text': '#FAFAFA', '--tech-text-muted': '#A3A3A3', '--tech-accent': '#ff6b9d'
+        },
+        'ocean': {
+          '--tech-bg': '#003d47', '--tech-surface': '#00525f', '--tech-border': 'rgba(0, 109, 119, 0.3)', '--tech-border-hover': 'rgba(0, 109, 119, 0.6)', '--tech-text': '#FAFAFA', '--tech-text-muted': '#A3A3A3', '--tech-accent': '#006d77'
+        },
+        'nature': {
+          '--tech-bg': '#112d21', '--tech-surface': '#173d2d', '--tech-border': 'rgba(45, 106, 79, 0.3)', '--tech-border-hover': 'rgba(45, 106, 79, 0.6)', '--tech-text': '#FAFAFA', '--tech-text-muted': '#A3A3A3', '--tech-accent': '#2d6a4f'
+        },
+        'lavender': {
+          '--tech-bg': '#2b2438', '--tech-surface': '#382f49', '--tech-border': 'rgba(157, 132, 183, 0.3)', '--tech-border-hover': 'rgba(157, 132, 183, 0.6)', '--tech-text': '#FAFAFA', '--tech-text-muted': '#A3A3A3', '--tech-accent': '#9d84b7'
+        },
+        'fire': {
+          '--tech-bg': '#330000', '--tech-surface': '#4d0000', '--tech-border': 'rgba(255, 69, 0, 0.3)', '--tech-border-hover': 'rgba(255, 69, 0, 0.6)', '--tech-text': '#FAFAFA', '--tech-text-muted': '#a3a3a3', '--tech-accent': '#ff4500'
+        }
+      };
+
+      (window as any).setTheme = (themeName: string) => {
+        const config = themeConfigs[themeName as keyof typeof themeConfigs];
+        if (config) {
+          const root = document.documentElement;
+          Object.entries(config).forEach(([key, value]) => {
+            root.style.setProperty(key, value);
+          });
+          
+          // Update active state on buttons
+          document.querySelectorAll('.theme-btn').forEach(btn => {
+            if (btn.getAttribute('data-theme') === themeName) {
+              btn.classList.add('border-dynamic-accent', 'scale-110');
+            } else {
+              btn.classList.remove('border-dynamic-accent', 'scale-110');
+            }
+          });
+        }
+      };
+    </script>
+
+    <!-- NAV -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-dynamic-surface/90 backdrop-blur-md theme-border transition-all duration-300 border-b">
+      <div class="max-w-7xl mx-auto flex items-center justify-between h-16 px-6 sm:px-8">
+        <!-- Logo SVG -->
+        <a href={`/${lang}/`} class="flex items-center gap-3 group text-dynamic-accent z-50">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1020 160" class="h-6 sm:h-8 w-auto transition-transform duration-500 group-hover:scale-105" style="fill: var(--tech-accent); stroke: var(--tech-accent);">
+            <path d="
+              M 28 60 L 28 127
+              M 28 60 L 72 60
+              M 28 93 L 65 93
+              M 28 127 L 72 127
+            " fill="none" stroke-width="16" stroke-linecap="round"/>
+            <text x="84" y="135" font-family="'Syne', sans-serif" font-size="115" font-weight="800" letter-spacing="-2" stroke="none">scape</text>
+            <path d="
+              M 470 127 L 470 76 C 470 54, 504 54, 504 76 L 504 127
+              M 504 76 C 504 54, 538 54, 538 76 L 538 127
+            " fill="none" stroke-width="16" stroke-linecap="round"/>
+            <text x="550" y="135" font-family="'Syne', sans-serif" font-size="115" font-weight="800" letter-spacing="-2" stroke="none">aster</text>
+          </svg>
+        </a>
+
+        <!-- Center Links -->
+        <div class="hidden md:flex items-center gap-8 font-mono text-xs uppercase tracking-[0.1em] font-bold">
+          <a href="#features" class="text-[var(--tech-text-muted)] hover:text-dynamic-accent transition-colors">{lang === 'es' ? 'Características' : 'Features'}</a>
+          <a href="#compare" class="text-[var(--tech-text-muted)] hover:text-dynamic-accent transition-colors">{lang === 'es' ? 'Comparativa' : 'Compare'}</a>
+          <a href="#pricing" class="text-[var(--tech-text-muted)] hover:text-dynamic-accent transition-colors">{lang === 'es' ? 'Precios' : 'Pricing'}</a>
+          <a href="#faq" class="text-[var(--tech-text-muted)] hover:text-dynamic-accent transition-colors">FAQ</a>
+        </div>
+
+        <!-- Right CTA -->
+        <div class="flex items-center gap-4">
+          <a href={`/${lang}/`} class="hidden sm:inline-flex items-center font-mono text-xs font-bold uppercase tracking-[0.1em] text-[var(--tech-text-muted)] hover:text-dynamic-accent transition-colors gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            EscapeMaster
+          </a>
+          <a href="https://manager.escapemaster.es" class="hidden sm:inline-flex items-center font-mono text-xs font-bold uppercase tracking-[0.1em] text-[var(--tech-text-muted)] hover:text-dynamic-accent transition-colors">
+            {lang === 'es' ? 'Log In' : 'Log In'}
+          </a>
+          <a href="#waitlist" class="inline-flex items-center justify-center h-10 px-6 bg-dynamic-accent text-dynamic-bg font-mono text-xs font-bold uppercase tracking-[0.1em] hover:opacity-90 transition-colors">
+            {lang === 'es' ? 'Get Started' : 'Get Started'}
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="pt-40 pb-20 sm:pt-48 sm:pb-32 px-6 sm:px-8 relative overflow-hidden bg-dot-grid">
+      <!-- Decorative grid overlay -->
+      <div class="absolute inset-0 bg-gradient-to-b from-[var(--tech-bg)] via-transparent to-[var(--tech-bg)] pointer-events-none"></div>
+      
+      <div class="max-w-7xl mx-auto relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          
+          <!-- Text Content -->
+          <div class="reveal-up" style="transition-delay: 0.1s">
+            <div class="inline-flex font-mono text-[10px] uppercase tracking-[0.2em] font-bold theme-border border px-3 py-1 mb-8 items-center gap-2 text-dynamic-accent">
+              <span class="w-1.5 h-1.5 bg-dynamic-accent rounded-full animate-pulse"></span>
+              v1.0.4-beta / System Online
+            </div>
+
+            <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight mb-8">
+              {lang === 'es' ? (
+                <>RESERVA.<br/>GESTIONA.<br/><span class="text-transparent bg-clip-text bg-dynamic-accent" style="-webkit-text-stroke: 1px var(--tech-accent);">DOMINA.</span></>
+              ) : (
+                <>BOOK.<br/>MANAGE.<br/><span class="text-transparent bg-clip-text bg-dynamic-accent" style="-webkit-text-stroke: 1px var(--tech-accent);">DOMINATE.</span></>
+              )}
+            </h1>
+
+            <p class="text-lg sm:text-xl text-[var(--tech-text-muted)] mb-10 max-w-lg leading-relaxed font-grotesk font-medium">
+              {lang === 'es'
+                ? 'La infraestructura de reservas más avanzada para escape rooms. Una suite de herramientas de nivel enterprise sin la complejidad.'
+                : 'The most advanced booking infrastructure for escape rooms. An enterprise-grade tool suite without the complexity.'
+              }
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 font-mono uppercase tracking-[0.1em] font-bold text-sm">
+              <a href="#waitlist" class="inline-flex items-center justify-center h-14 px-8 bg-dynamic-accent text-dynamic-bg hover:opacity-90 transition-colors w-full sm:w-auto">
+                {lang === 'es' ? 'Desplegar Ahora' : 'Deploy Now'}
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="square" stroke-linejoin="miter" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"></path></svg>
+              </a>
+              <a href="#features" class="inline-flex items-center justify-center h-14 px-8 border-dynamic-accent border text-dynamic-accent hover:bg-[var(--tech-surface)] transition-colors w-full sm:w-auto">
+                {lang === 'es' ? 'Ver Specs' : 'View Specs'}
+              </a>
+            </div>
+          </div>
+
+          <!-- Hero Wireframe Mockup -->
+          <div class="relative reveal-up" style="transition-delay: 0.3s">
+            <div class="blueprint-frame p-4 sm:p-6 z-10">
+              <!-- Mockup Header -->
+              <div class="flex items-center justify-between theme-border border-b pb-4 mb-4">
+                <div class="flex gap-2">
+                  <div class="w-2 h-2 border-dynamic-accent border rounded-full"></div>
+                  <div class="w-2 h-2 border-dynamic-accent border rounded-full"></div>
+                  <div class="w-2 h-2 border-dynamic-accent border rounded-full"></div>
+                </div>
+                <div class="font-mono text-[10px] tracking-widest text-[var(--tech-text-muted)]">~/dashboard/metrics</div>
+              </div>
+              
+              <!-- Mockup Grid -->
+              <div class="grid grid-cols-2 gap-4">
+                <div class="theme-border border p-4 bg-dynamic-surface">
+                  <div class="font-mono text-[10px] uppercase text-[var(--tech-text-muted)]">MRR</div>
+                  <div class="font-display text-2xl font-bold mt-1 text-dynamic-accent">12.4K</div>
+                  <div class="w-full h-8 mt-4 border-b border-l theme-border relative">
+                    <svg class="absolute bottom-0 left-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+                      <polyline points="0,90 20,70 40,80 60,40 80,50 100,10" class="wireframe-stroke"></polyline>
+                    </svg>
+                  </div>
+                </div>
+                <div class="theme-border border p-4 bg-dynamic-surface">
+                  <div class="font-mono text-[10px] uppercase text-[var(--tech-text-muted)]">Bookings</div>
+                  <div class="font-display text-2xl font-bold mt-1 text-dynamic-accent">284</div>
+                  <div class="w-full h-8 mt-4 border-b border-l theme-border relative">
+                    <!-- Bar chart wireframe -->
+                    <div class="absolute bottom-0 left-[10%] w-[10%] h-[30%] border theme-border"></div>
+                    <div class="absolute bottom-0 left-[30%] w-[10%] h-[50%] border theme-border"></div>
+                    <div class="absolute bottom-0 left-[50%] w-[10%] h-[40%] border theme-border"></div>
+                    <div class="absolute bottom-0 left-[70%] w-[10%] h-[80%] border-dynamic-accent border bg-dynamic-accent opacity-20"></div>
+                  </div>
+                </div>
+                <div class="col-span-2 theme-border border p-4 bg-dynamic-surface">
+                  <div class="flex justify-between items-center mb-4">
+                    <div class="font-mono text-[10px] uppercase text-[var(--tech-text-muted)]">Event Stream</div>
+                    <div class="w-2 h-2 bg-dynamic-accent animate-pulse"></div>
+                  </div>
+                  <div class="space-y-3 font-mono text-[10px]">
+                    <div class="flex items-center gap-4 text-[var(--tech-text)]">
+                      <span class="text-[var(--tech-text-muted)]">09:41</span>
+                      <span class="px-1 theme-border border uppercase">Booking</span>
+                      <span class="truncate">New booking: Mission Impossible (4 pax)</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-[var(--tech-text)]">
+                      <span class="text-[var(--tech-text-muted)]">09:38</span>
+                      <span class="px-1 theme-border border uppercase">Payment</span>
+                      <span class="truncate">Payment intent succeeded (id_8f72...)</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-[var(--tech-text)]">
+                      <span class="text-[var(--tech-text-muted)]">09:12</span>
+                      <span class="px-1 theme-border border uppercase">System</span>
+                      <span class="truncate">AI optimized schedule gaps for Dec 24</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Decorative backdrop blocks -->
+            <div class="absolute -top-4 -right-4 w-full h-full theme-border border pointer-events-none -z-10 opacity-50 bg-dynamic-surface"></div>
+            <div class="absolute -bottom-4 -left-4 w-full h-full theme-border border pointer-events-none -z-20 opacity-25 bg-dot-grid-dense"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DATA TICKER -->
+    <div class="border-y border-dynamic-accent py-3 bg-dynamic-bg overflow-hidden flex whitespace-nowrap font-mono text-xs uppercase tracking-[0.2em] font-bold reveals-up">
+      <div class="animate-[marquee_20s_linear_infinite] flex gap-12 text-[var(--tech-text-muted)]">
+        <span>12 Widgets</span>
+        <span>•</span>
+        <span>{lang === 'es' ? '8 Temas' : '8 Themes'}</span>
+        <span>•</span>
+        <span>{lang === 'es' ? '33 Reglas RBAC' : '33 RBAC Rules'}</span>
+        <span>•</span>
+        <span>{lang === 'es' ? '99.9% Disponibilidad' : '99.9% Uptime'}</span>
+        <span>•</span>
+        <span>{lang === 'es' ? 'Asistido por IA' : 'AI Assisted'}</span>
+        <span>•</span>
+        <span>Webhooks</span>
+        <span>•</span>
+        <span>Enterprise Ready</span>
+        <span>•</span>
+        <span>12 Widgets</span>
+        <span>•</span>
+        <span>{lang === 'es' ? '8 Temas' : '8 Themes'}</span>
+        <span>•</span>
+        <span>{lang === 'es' ? '33 Reglas RBAC' : '33 RBAC Rules'}</span>
+        <span>•</span>
+        <span>{lang === 'es' ? '99.9% Disponibilidad' : '99.9% Uptime'}</span>
+        <span>•</span>
+        <span>{lang === 'es' ? 'Asistido por IA' : 'AI Assisted'}</span>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
+    <section id="features" class="py-24 sm:py-32 px-6 sm:px-8 max-w-7xl mx-auto">
+      <div class="mb-16 reveal-up">
+        <h2 class="font-display text-3xl sm:text-5xl font-extrabold uppercase mb-4 text-dynamic-accent">
+          {lang === 'es' ? 'Capacidades' : 'Capabilities'}
+        </h2>
+        <div class="w-16 h-1 bg-dynamic-accent mb-8"></div>
+        <p class="text-lg text-[var(--tech-text-muted)] font-medium max-w-2xl">
+          {lang === 'es' 
+            ? 'Arquitectura modular diseñada para escalar. Cada componente está optimizado para velocidad y precisión.'
+            : 'Modular architecture designed to scale. Each component is optimized for speed and precision.'}
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[
+          {
+            title: lang === 'es' ? 'Calendario Inteligente' : 'Smart Calendar',
+            desc: lang === 'es' ? 'Detección de conflictos, drag-and-drop, y reglas de precios dinámicos integradas en la matriz temporal.' : 'Conflict detection, drag-and-drop, and dynamic pricing rules integrated into the time matrix.',
+            icon: `<rect x="3" y="4" width="18" height="18" rx="2" ry="2" class="wireframe-stroke"></rect><line x1="16" y1="2" x2="16" y2="6" class="wireframe-stroke"></line><line x1="8" y1="2" x2="8" y2="6" class="wireframe-stroke"></line><line x1="3" y1="10" x2="21" y2="10" class="wireframe-stroke"></line>`
+          },
+          {
+            title: lang === 'es' ? 'Matriz de Datos' : 'Data Grid',
+            desc: lang === 'es' ? 'Widgets configurables. Renderizado de alto rendimiento para miles de transacciones y bookings en tiempo real.' : 'Configurable widgets. High-performance rendering for thousands of transactions and real-time bookings.',
+            icon: `<rect x="3" y="3" width="7" height="7" class="wireframe-stroke"></rect><rect x="14" y="3" width="7" height="7" class="wireframe-stroke"></rect><rect x="14" y="14" width="7" height="7" class="wireframe-stroke"></rect><rect x="3" y="14" width="7" height="7" class="wireframe-stroke"></rect>`
+          },
+          {
+            title: lang === 'es' ? 'Control de Roles (RBAC)' : 'Role Base Access',
+            desc: lang === 'es' ? '33 permisos atómicos distribuidos en 8 agrupaciones. Control total sobre quién hace qué y cuándo.' : '33 atomic permissions distributed in 8 groups. Full control over who does what and when.',
+            icon: `<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" class="wireframe-stroke"></path>`
+          },
+          {
+            title: lang === 'es' ? 'Capa de Pagos' : 'Payments Layer',
+            desc: lang === 'es' ? 'Motor de pasarela unificado con múltiples métodos de pago integrados. Sistema de cupones con estado.' : 'Unified gateway engine with multiple integrated payment methods. Stateful coupon system.',
+            icon: `<rect x="2" y="5" width="20" height="14" rx="2" class="wireframe-stroke"></rect><line x1="2" y1="10" x2="22" y2="10" class="wireframe-stroke"></line>`
+          },
+          {
+            title: lang === 'es' ? 'Telemetría de Equipo' : 'Team Telemetry',
+            desc: lang === 'es' ? 'Tracking de horas, status en tiempo real (online/offline) y gestión de recursos humanos integrados.' : 'Time tracking, real-time status (online/offline), and integrated human resources management.',
+            icon: `<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" class="wireframe-stroke"></path><circle cx="9" cy="7" r="4" class="wireframe-stroke"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87" class="wireframe-stroke"></path><path d="M16 3.13a4 4 0 0 1 0 7.75" class="wireframe-stroke"></path>`
+          },
+          {
+            title: lang === 'es' ? 'Motor de Análisis' : 'Analytics Engine',
+            desc: lang === 'es' ? 'Agregación de datos On-the-fly. Reportes de revenue y proyecciones exportables vía CSV o API.' : 'On-the-fly data aggregation. Revenue reports and projections exportable via CSV or API.',
+            icon: `<polyline points="22 12 18 12 15 21 9 3 6 12 2 12" class="wireframe-stroke"></polyline>`
+          }
+        ].map((feature, i) => (
+          <div class="tech-card p-8 group reveal-up" style={`transition-delay: ${i * 0.1}s`}>
+            <div class="mb-6 h-12 w-12 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" class="transition-transform group-hover:scale-110" set:html={feature.icon}></svg>
+            </div>
+            <h3 class="font-mono text-sm uppercase tracking-widest font-bold mb-3 text-dynamic-accent">{feature.title}</h3>
+            <p class="text-sm text-[var(--tech-text-muted)] leading-relaxed">{feature.desc}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+
+    <!-- STATS BAR -->
+    <section class="border-y theme-border bg-dynamic-surface py-10 px-6 sm:px-8">
+      <div class="max-w-7xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
+        {[
+          { value: '+500', label: lang === 'es' ? 'Escape rooms' : 'Escape rooms' },
+          { value: '+12K', label: lang === 'es' ? 'Reservas / mes' : 'Bookings / month' },
+          { value: '99.9%', label: lang === 'es' ? 'Disponibilidad' : 'Uptime' },
+          { value: '10', label: lang === 'es' ? 'Paletas de marca' : 'Brand themes' },
+        ].map(stat => (
+          <div class="reveal-up">
+            <div class="font-display text-4xl sm:text-5xl font-extrabold text-dynamic-accent">{stat.value}</div>
+            <div class="font-mono text-[10px] uppercase tracking-widest mt-2 text-[var(--tech-text-muted)]">{stat.label}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- COMPARISON TABLE -->
+    <section id="compare" class="py-24 sm:py-32 px-6 sm:px-8 border-b theme-border">
+      <div class="max-w-4xl mx-auto">
+        <div class="mb-16 reveal-up">
+          <h2 class="font-display text-3xl sm:text-5xl font-extrabold uppercase mb-4 text-dynamic-accent">
+            {lang === 'es' ? 'Comparativa' : 'Comparison'}
+          </h2>
+          <div class="w-16 h-1 bg-dynamic-accent mb-8"></div>
+          <p class="text-lg text-[var(--tech-text-muted)] font-medium max-w-2xl">
+            {lang === 'es'
+              ? 'EscapeMaster Manager vs ERDirector (Escape Director). Ve las diferencias clave.'
+              : 'EscapeMaster Manager vs ERDirector (Escape Director). See the key differences.'}
+          </p>
+        </div>
+
+        <div class="overflow-x-auto reveal-scale">
+          <table class="w-full font-mono text-xs border-collapse">
+            <thead>
+              <tr class="border-b-2 theme-border">
+                <th class="text-left py-4 pr-8 text-[var(--tech-text-muted)] uppercase tracking-widest">{lang === 'es' ? 'Característica' : 'Feature'}</th>
+                <th class="py-4 px-6 text-center text-dynamic-accent uppercase tracking-widest border-x theme-border bg-dynamic-surface">EscapeMaster</th>
+                <th class="py-4 px-6 text-center text-[var(--tech-text-muted)] uppercase tracking-widest">ERDirector</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { feature: lang === 'es' ? 'Dashboard en tiempo real con widgets' : 'Real-time widget dashboard', em: true, erd: false },
+                { feature: lang === 'es' ? 'Calendario inteligente con drag & drop' : 'Smart calendar with drag & drop', em: true, erd: false },
+                { feature: lang === 'es' ? 'Control RBAC (33 permisos atómicos)' : 'RBAC Access Control (33 atomic permissions)', em: true, erd: false },
+                { feature: lang === 'es' ? 'Asistente IA integrado' : 'Built-in AI assistant', em: true, erd: false },
+                { feature: lang === 'es' ? 'Paletas de marca (10 temas)' : 'Brand theming (10 themes)', em: true, erd: false },
+                { feature: lang === 'es' ? 'Gestión multisala' : 'Multi-room management', em: true, erd: true },
+                { feature: lang === 'es' ? 'Pistas multimedia (texto, imagen, vídeo)' : 'Multimedia clues (text, image, video)', em: false, erd: true },
+                { feature: lang === 'es' ? 'Vista del Game Master en directo' : 'Live Game Master view', em: false, erd: true },
+                { feature: lang === 'es' ? 'Estadísticas de partidas (tiempo medio, pistas)' : 'Game statistics (avg time, clues)', em: 'partial', erd: true },
+                { feature: lang === 'es' ? 'Análisis de revenue y proyección' : 'Revenue analytics & projection', em: true, erd: false },
+                { feature: 'Webhooks + Open API', em: true, erd: false },
+                { feature: lang === 'es' ? 'Sistema de reservas online integrado' : 'Integrated online booking system', em: true, erd: false },
+                { feature: lang === 'es' ? 'Sin comisiones por reserva' : 'No per-booking commission', em: true, erd: true },
+                { feature: lang === 'es' ? 'Motor de pagos unificado' : 'Unified payment engine', em: true, erd: false },
+              ].map(row => (
+                <tr class="border-b theme-border hover:bg-dynamic-surface transition-colors">
+                  <td class="py-4 pr-8 text-[var(--tech-text)]">{row.feature}</td>
+                  <td class="py-4 px-6 text-center border-x theme-border bg-dynamic-surface">
+                    {row.em === true ? <span class="text-dynamic-accent font-bold">✓</span> : row.em === 'partial' ? <span class="text-dynamic-accent opacity-60">~</span> : <span class="text-[var(--tech-text-muted)] opacity-30">—</span>}
+                  </td>
+                  <td class="py-4 px-6 text-center">
+                    {row.erd === true ? <span class="text-[var(--tech-text-muted)]">✓</span> : <span class="text-[var(--tech-text-muted)] opacity-30">—</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-8 text-center reveal-up">
+          <p class="font-mono text-[10px] uppercase tracking-widest text-[var(--tech-text-muted)]">
+            {lang === 'es'
+              ? 'ERDirector se centra en el game mastering (pistas multimedia, vista live). EscapeMaster cubre la gestión completa del negocio.'
+              : 'ERDirector focuses on game mastering (multimedia clues, live view). EscapeMaster covers complete business management.'}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section id="pricing" class="py-24 sm:py-32 px-6 sm:px-8 bg-dynamic-surface border-b theme-border">
+      <div class="max-w-7xl mx-auto">
+        <div class="mb-16 reveal-up">
+          <h2 class="font-display text-3xl sm:text-5xl font-extrabold uppercase mb-4 text-dynamic-accent">
+            {lang === 'es' ? 'Precios' : 'Pricing'}
+          </h2>
+          <div class="w-16 h-1 bg-dynamic-accent mb-8"></div>
+          <p class="text-lg text-[var(--tech-text-muted)] font-medium max-w-2xl">
+            {lang === 'es'
+              ? 'Sin sorpresas. Sin comisiones por reserva. Elige el plan que escala con tu negocio.'
+              : 'No surprises. No per-booking commissions. Choose the plan that scales with your business.'}
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <!-- Free Trial -->
+          <div class="tech-card p-8 reveal-left">
+            <div class="font-mono text-[10px] uppercase tracking-widest text-[var(--tech-text-muted)] mb-4">{lang === 'es' ? 'Prueba gratuita' : 'Free Trial'}</div>
+            <div class="flex items-baseline gap-1 mb-2">
+              <div class="font-display text-5xl font-extrabold text-dynamic-accent">0<span class="text-2xl">€</span></div>
+            </div>
+            <div class="font-mono text-xs text-[var(--tech-text-muted)] mb-8">{lang === 'es' ? '1 mes completo · sin compromiso' : '1 full month · no commitment'}</div>
+            <ul class="space-y-3 font-mono text-xs mb-8">
+              {[
+                lang === 'es' ? 'Acceso completo 30 días' : 'Full access for 30 days',
+                lang === 'es' ? 'Todas las funcionalidades' : 'All features included',
+                lang === 'es' ? 'Sin tarjeta de crédito' : 'No credit card required',
+                lang === 'es' ? 'Soporte por email' : 'Email support',
+              ].map(f => <li class="flex items-start gap-2"><span class="text-dynamic-accent mt-0.5">›</span>{f}</li>)}
+            </ul>
+            <a href="#waitlist" class="block w-full text-center border theme-border font-mono text-xs font-bold uppercase tracking-widest py-4 hover:bg-dynamic-accent hover:text-dynamic-bg transition-all duration-300">
+              {lang === 'es' ? 'Empezar gratis' : 'Start free'}
+            </a>
+          </div>
+
+          <!-- Standard -->
+          <div class="tech-card p-8 reveal-up border-dynamic-accent relative animate-pulse-border" style="border-width: 2px; transition-delay: 0.1s">
+            <div class="absolute -top-3 left-8 bg-dynamic-accent text-dynamic-bg font-mono text-[9px] uppercase tracking-widest px-3 py-1">{lang === 'es' ? 'Más popular' : 'Most popular'}</div>
+            <div class="font-mono text-[10px] uppercase tracking-widest text-dynamic-accent mb-4">Standard</div>
+            <div class="flex items-baseline gap-1 mb-2">
+              <div class="font-display text-5xl font-extrabold text-dynamic-accent">26<span class="text-2xl">€</span></div>
+            </div>
+            <div class="font-mono text-xs text-[var(--tech-text-muted)] mb-8">{lang === 'es' ? '/ mes · por local' : '/ month · per venue'}</div>
+            <ul class="space-y-3 font-mono text-xs mb-8">
+              {[
+                lang === 'es' ? 'Salas ilimitadas' : 'Unlimited rooms',
+                lang === 'es' ? 'Reservas ilimitadas' : 'Unlimited bookings',
+                lang === 'es' ? 'Dashboard completo' : 'Full dashboard',
+                lang === 'es' ? 'RBAC básico' : 'Basic RBAC',
+                lang === 'es' ? 'Soporte prioritario' : 'Priority support',
+              ].map(f => <li class="flex items-start gap-2"><span class="text-dynamic-accent mt-0.5">›</span>{f}</li>)}
+            </ul>
+            <a href="#waitlist" class="block w-full text-center bg-dynamic-accent text-dynamic-bg font-mono text-xs font-bold uppercase tracking-widest py-4 hover:opacity-90 transition-all duration-300">
+              {lang === 'es' ? 'Empezar ahora' : 'Get started'}
+            </a>
+          </div>
+
+          <!-- Pro -->
+          <div class="tech-card p-8 reveal-right" style="transition-delay: 0.2s">
+            <div class="font-mono text-[10px] uppercase tracking-widest text-[var(--tech-text-muted)] mb-4">Pro</div>
+            <div class="flex items-baseline gap-1 mb-2">
+              <div class="font-display text-5xl font-extrabold text-dynamic-accent">60<span class="text-2xl">€</span></div>
+            </div>
+            <div class="font-mono text-xs text-[var(--tech-text-muted)] mb-8">{lang === 'es' ? '/ mes · por local' : '/ month · per venue'}</div>
+            <ul class="space-y-3 font-mono text-xs mb-8">
+              {[
+                lang === 'es' ? 'Todo lo de Standard' : 'Everything in Standard',
+                lang === 'es' ? 'Asistente IA integrado' : 'Built-in AI assistant',
+                lang === 'es' ? 'RBAC completo (33 permisos)' : 'Full RBAC (33 permissions)',
+                lang === 'es' ? 'Webhooks + API' : 'Webhooks + API',
+                lang === 'es' ? 'Multi-sede centralizado' : 'Centralized multi-venue',
+                lang === 'es' ? 'SLA 99.9% garantizado' : '99.9% SLA guarantee',
+                lang === 'es' ? 'Marca blanca disponible' : 'White-label available',
+              ].map(f => <li class="flex items-start gap-2"><span class="text-dynamic-accent mt-0.5">›</span>{f}</li>)}
+            </ul>
+            <a href="mailto:hello@escapemaster.es" class="block w-full text-center border theme-border font-mono text-xs font-bold uppercase tracking-widest py-4 hover:bg-dynamic-accent hover:text-dynamic-bg transition-all duration-300">
+              {lang === 'es' ? 'Contactar' : 'Contact us'}
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    <section class="py-24 sm:py-32 px-6 sm:px-8 border-b theme-border bg-dynamic-surface">
+      <div class="max-w-7xl mx-auto">
+        <div class="mb-16 reveal-up">
+          <h2 class="font-display text-3xl sm:text-5xl font-extrabold uppercase mb-4 text-dynamic-accent">
+            {lang === 'es' ? 'Lo que dicen' : 'What They Say'}
+          </h2>
+          <div class="w-16 h-1 bg-dynamic-accent mb-8"></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            {
+              quote: lang === 'es'
+                ? '"Pasé de gestionar reservas en hojas de cálculo a tener un dashboard completo en un día. El asistente IA ahorra horas cada semana."'
+                : '"I went from managing bookings in spreadsheets to a full dashboard in one day. The AI assistant saves hours every week."',
+              author: 'Laura G.',
+              role: lang === 'es' ? 'Operadora · 3 salas · Madrid' : 'Operator · 3 rooms · Madrid',
+            },
+            {
+              quote: lang === 'es'
+                ? '"El sistema de permisos RBAC nos permite dar acceso al equipo sin comprometer la seguridad. Nada más me da ese control."'
+                : '"The RBAC permission system lets us give access to the team without compromising security. Nothing else gives me that control."',
+              author: 'M. Torres',
+              role: lang === 'es' ? 'Director Operativo · 7 salas · Barcelona' : 'Operations Director · 7 rooms · Barcelona',
+            },
+            {
+              quote: lang === 'es'
+                ? '"Migramos desde Bookeo en dos semanas. El soporte fue excepcional y los reportes de revenue son exactamente lo que necesitábamos."'
+                : '"We migrated from Bookeo in two weeks. Support was exceptional and the revenue reports are exactly what we needed."',
+              author: 'S. Petit',
+              role: lang === 'es' ? 'Fundadora · 4 salas · Valencia' : 'Founder · 4 rooms · Valencia',
+            },
+          ].map((t, i) => (
+            <div class="tech-card p-8 reveal-up" style={`transition-delay: ${i * 0.1}s`}>
+              <p class="text-[var(--tech-text)] mb-8 leading-relaxed text-sm">{t.quote}</p>
+              <div class="border-t theme-border pt-4">
+                <div class="font-mono text-xs font-bold text-dynamic-accent">{t.author}</div>
+                <div class="font-mono text-[10px] text-[var(--tech-text-muted)] mt-1">{t.role}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="py-24 sm:py-32 px-6 sm:px-8 border-b theme-border">
+      <div class="max-w-3xl mx-auto">
+        <div class="mb-16 reveal-up">
+          <h2 class="font-display text-3xl sm:text-5xl font-extrabold uppercase mb-4 text-dynamic-accent">FAQ</h2>
+          <div class="w-16 h-1 bg-dynamic-accent mb-8"></div>
+          <p class="text-lg text-[var(--tech-text-muted)] font-medium">
+            {lang === 'es' ? 'Preguntas frecuentes.' : 'Frequently asked questions.'}
+          </p>
+        </div>
+        <div class="space-y-2 reveal-up">
+          {[
+            {
+              q: lang === 'es' ? '¿Cuánto tiempo tarda la configuración inicial?' : 'How long does the initial setup take?',
+              a: lang === 'es' ? 'La mayoría de equipos están operativos en menos de 24 horas. El onboarding guiado cubre la importación de datos, configuración de salas y creación de roles.' : 'Most teams are operational in less than 24 hours. Guided onboarding covers data import, room configuration, and role creation.',
+            },
+            {
+              q: lang === 'es' ? '¿Compatible con mis pasarelas de pago actuales?' : 'Is it compatible with my current payment gateways?',
+              a: lang === 'es' ? 'Sí. EscapeMaster soporta múltiples pasarelas de pago mediante nuestro motor de pago unificado. Si usas una pasarela específica, consulta con nuestro equipo.' : 'Yes. EscapeMaster supports multiple payment gateways via our unified payment engine. If you use a specific gateway, check with our team.',
+            },
+            {
+              q: lang === 'es' ? '¿Mis datos están seguros?' : 'Is my data secure?',
+              a: lang === 'es' ? 'Todos los datos se almacenan en servidores europeos (GDPR compliant). Usamos cifrado en tránsito y en reposo, backups diarios y acceso auditado mediante logs.' : 'All data is stored on European servers (GDPR compliant). We use encryption in transit and at rest, daily backups, and audited access via logs.',
+            },
+            {
+              q: lang === 'es' ? '¿Puedo gestionar múltiples locales desde una sola cuenta?' : 'Can I manage multiple venues from one account?',
+              a: lang === 'es' ? 'Sí, con el plan Enterprise. Tendrás un panel centralizado con cambio rápido de sede y permisos granulares por local y empleado.' : 'Yes, with the Enterprise plan. You get a centralized panel with fast venue switching and granular permissions per location and employee.',
+            },
+            {
+              q: lang === 'es' ? '¿El asistente IA requiere configuración extra?' : 'Does the AI assistant require extra setup?',
+              a: lang === 'es' ? 'No. Está integrado desde el primer día y aprende de tus datos históricos automáticamente. Puedes empezar a interrogarlo con lenguaje natural desde el dashboard.' : 'No. It is integrated from day one and learns from your historical data automatically. You can start querying it in natural language from the dashboard.',
+            },
+            {
+              q: lang === 'es' ? '¿Ofrecen white-label o marca blanca?' : 'Do you offer a white-label option?',
+              a: lang === 'es' ? 'Sí, en el plan Enterprise. Puedes personalizar colores, logos y dominio para que tus clientes vean tu propia marca.' : 'Yes, on the Enterprise plan. You can customize colors, logos, and domain so your clients see your own brand.',
+            },
+            {
+              q: lang === 'es' ? '¿Qué SLA ofrecen?' : 'What SLA do you offer?',
+              a: lang === 'es' ? 'El plan Pro incluye 99.9% de disponibilidad. El plan Enterprise incluye SLA contractual con compensación en caso de incumplimiento.' : 'The Pro plan includes 99.9% uptime. The Enterprise plan includes a contractual SLA with compensation in case of breach.',
+            },
+            {
+              q: lang === 'es' ? '¿Puedo cancelar en cualquier momento?' : 'Can I cancel at any time?',
+              a: lang === 'es' ? 'Sí. No hay permanencia ni penalizaciones por cancelación. Tus datos permanecen exportables en cualquier momento durante 30 días tras la baja.' : 'Yes. No lock-in or cancellation penalties. Your data remains exportable at any time for 30 days after cancellation.',
+            },
+          ].map((item, i) => (
+            <details class="border theme-border group reveal-up" style={`transition-delay: ${i * 0.05}s`}>
+              <summary class="flex items-center justify-between p-6 cursor-pointer font-mono text-xs font-bold uppercase tracking-widest text-[var(--tech-text)] hover:text-dynamic-accent transition-colors list-none">
+                <span>{item.q}</span>
+                <span class="text-dynamic-accent text-lg group-open:rotate-45 transition-transform duration-300 ml-4 flex-shrink-0">+</span>
+              </summary>
+              <div class="px-6 pb-6 text-sm text-[var(--tech-text-muted)] leading-relaxed border-t theme-border pt-4">{item.a}</div>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- OBSERVABILITY / AI -->
+    <section id="observability" class="py-24 sm:py-32 px-6 sm:px-8 border-y theme-border bg-dynamic-surface flex items-center relative overflow-hidden">
+      <div class="absolute inset-0 bg-dot-grid opacity-30 pointer-events-none"></div>
+      <div class="max-w-7xl mx-auto w-full relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          
+          <!-- Isometric Graphic -->
+          <div class="reveal-up order-2 lg:order-1 relative h-[400px]">
+            <!-- A custom isometric wireframe illustration constructed with borders -->
+            <div class="absolute top-[20%] left-[10%] w-[60%] h-[60%] border-dynamic-accent border transform rotate-x-[60deg] rotate-z-[-45deg] bg-[var(--tech-bg)] opacity-80" style="box-shadow: 10px 10px 0 var(--tech-border);">
+              <!-- Internal grid lines -->
+              <div class="absolute top-1/3 left-0 w-full h-px theme-border"></div>
+              <div class="absolute top-2/3 left-0 w-full h-px theme-border"></div>
+              <div class="absolute top-0 left-1/3 w-px h-full theme-border"></div>
+              <div class="absolute top-0 left-2/3 w-px h-full theme-border"></div>
+            </div>
+            
+            <div class="absolute top-[10%] left-[20%] w-[40%] h-[40%] border-2 border-dynamic-accent transform rotate-x-[60deg] rotate-z-[-45deg] bg-transparent translate-z-[100px] flex items-center justify-center">
+              <div class="font-mono text-4xl uppercase font-bold text-dynamic-accent">*AI</div>
+            </div>
+            
+            <!-- Connection lines -->
+            <svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: 1;">
+              <path d="M 150 200 L 150 150" stroke="var(--tech-accent)" stroke-dasharray="4,4" stroke-width="1.5" />
+              <path d="M 250 250 L 250 180" stroke="var(--tech-accent)" stroke-dasharray="4,4" stroke-width="1.5" />
+            </svg>
+            
+            <div class="absolute bottom-10 right-10 p-4 border border-dynamic-accent bg-[var(--tech-bg)] font-mono text-[10px] uppercase" style="box-shadow: 4px 4px 0 var(--tech-accent);">
+              <div class="text-[var(--tech-text-muted)] mb-2">System.Agent.Status</div>
+              <div class="flex items-center gap-2 text-dynamic-accent font-bold">
+                <span class="w-2 h-2 bg-dynamic-accent animate-pulse"></span> Active & Optimizing
+              </div>
+            </div>
+          </div>
+
+          <!-- Text -->
+          <div class="reveal-up order-1 lg:order-2">
+            <h2 class="font-display text-3xl sm:text-5xl font-extrabold uppercase mb-6 text-dynamic-accent">
+              <span set:html={lang === 'es' ? 'Autopilot<br/>Activado.' : 'Autopilot<br/>Activated.'}></span>
+            </h2>
+            <div class="w-16 h-1 bg-dynamic-accent mb-6"></div>
+            <p class="text-lg text-[var(--tech-text-muted)] font-medium mb-8">
+              {lang === 'es'
+                ? 'No es solo un chatbot. Es un agente inteligente integrado directamente en el core de tu sistema de reservas.'
+                : 'Not just a chatbot. It is an intelligent agent integrated directly into the core of your booking system.'}
+            </p>
+            <ul class="space-y-4 font-mono text-xs font-medium text-[var(--tech-text)]">
+              <li class="flex items-start gap-3">
+                <span class="mt-0.5 text-dynamic-accent">›</span>
+                <span>{lang === 'es' ? 'Optimización de Huecos: Detecta y recomienda cierre de franjas ineficientes.' : 'Gap Optimization: Detects and recommends closing inefficient time slots.'}</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="mt-0.5 text-dynamic-accent">›</span>
+                <span>{lang === 'es' ? 'Modo Interrogación: "Muéstrame el revenue del fin de semana pasado frente al anterior".' : 'Interrogation Mode: "Show me last weekend\'s revenue versus the previous one".'}</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <span class="mt-0.5 text-dynamic-accent">›</span>
+                <span>{lang === 'es' ? 'Análisis Predictivo: Anticipa carga de trabajo basándose en datos históricos.' : 'Predictive Analysis: Anticipates workload based on historical data.'}</span>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- WAITLIST FORM -->
+    <section id="waitlist" class="py-24 sm:py-32 px-6 sm:px-8 border-b theme-border bg-dot-grid-dense flex items-center justify-center">
+      <div class="max-w-2xl w-full mx-auto relative reveal-up">
+        <div class="blueprint-frame p-8 sm:p-12 text-center bg-[var(--tech-bg)]">
+           <div class="font-mono text-xs font-bold uppercase tracking-[0.2em] text-[var(--tech-text-muted)] mb-4 block">
+             {lang === 'es' ? 'Beta Privada' : 'Private Beta'}
+           </div>
+           <h2 class="font-display text-4xl sm:text-5xl font-extrabold uppercase mb-6 text-dynamic-accent">
+             {lang === 'es' ? 'Sé el primero en enterarte' : 'Be the first to know'}
+           </h2>
+           <p class="text-[var(--tech-text-muted)] mb-10 max-w-md mx-auto">
+             {lang === 'es' ? 'Apúntate a la lista de espera para recibir acceso anticipado. Cupos estrictamente limitados.' : 'Join the waitlist for early access. Spots strictly limited.'}
+           </p>
+           
+           <form class="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto" onsubmit="event.preventDefault(); alert('Gracias por tu interés.');">
+             <input type="email" required placeholder="tu@email.com" class="flex-1 bg-transparent border theme-border font-mono text-sm px-6 py-4 focus:outline-none focus:border-dynamic-accent text-[var(--tech-text)] placeholder-[var(--tech-text-muted)] transition-colors" />
+             <button type="submit" class="bg-dynamic-accent text-dynamic-bg font-mono font-bold uppercase tracking-widest text-xs px-8 py-4 hover:opacity-90 transition-opacity">
+               {lang === 'es' ? 'MANTENME INFORMADO' : 'NOTIFY ME'}
+             </button>
+           </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- THEME SWAPPER (FOOTER UPPER) -->
+    <div class="border-b theme-border py-8 px-6 bg-dynamic-surface">
+      <div class="max-w-7xl mx-auto flex flex-col items-center justify-center gap-6">
+        <span class="font-mono text-[10px] uppercase font-bold tracking-widest text-[var(--tech-text-muted)]">
+          {lang === 'es' ? 'Seleccionar Paleta:' : 'Select Brand Palette:'}
+        </span>
+        <div class="flex flex-wrap justify-center gap-4">
+          <button onclick="setTheme('default')" data-theme="default" title="Marketplace Blue" class="theme-btn w-8 h-8 rounded-full border-2 border-[rgba(0,151,178,0.2)] bg-white flex items-center justify-center transition-transform scale-110 border-dynamic-accent">
+             <span class="w-3 h-3 rounded-full bg-[#0097b2]"></span>
+          </button>
+          
+          <button onclick="setTheme('mono')" data-theme="mono" title="Minimal Mono" class="theme-btn w-8 h-8 rounded-full border-2 border-transparent hover:border-dynamic-accent bg-white flex items-center justify-center transition-transform">
+             <span class="w-3 h-3 rounded-full bg-[#000000]"></span>
+          </button>
+          
+          <button onclick="setTheme('tropical')" data-theme="tropical" title="Tropical" class="theme-btn w-8 h-8 rounded-full border-2 border-transparent hover:border-dynamic-accent bg-[#0d3d34] flex items-center justify-center transition-transform">
+             <span class="w-3 h-3 rounded-full bg-[#1f6357]"></span>
+          </button>
+          
+          <button onclick="setTheme('twilight')" data-theme="twilight" title="Twilight" class="theme-btn w-8 h-8 rounded-full border-2 border-transparent hover:border-dynamic-accent bg-[#111827] flex items-center justify-center transition-transform">
+             <span class="w-3 h-3 rounded-full bg-[#4338ca]"></span>
+          </button>
+
+          <button onclick="setTheme('vista')" data-theme="vista" title="Vista" class="theme-btn w-8 h-8 rounded-full border-2 border-transparent hover:border-dynamic-accent bg-[#2a0f08] flex items-center justify-center transition-transform">
+             <span class="w-3 h-3 rounded-full bg-[#d56a34]"></span>
+          </button>
+
+          <button onclick="setTheme('mint')" data-theme="mint" title="Mint" class="theme-btn w-8 h-8 rounded-full border-2 border-transparent hover:border-dynamic-accent bg-[#163d39] flex items-center justify-center transition-transform">
+             <span class="w-3 h-3 rounded-full bg-[#1f756e]"></span>
+          </button>
+
+          <button onclick="setTheme('sunset')" data-theme="sunset" title="Sunset" class="theme-btn w-8 h-8 rounded-full border-2 border-transparent hover:border-dynamic-accent bg-[#2a1118] flex items-center justify-center transition-transform">
+             <span class="w-3 h-3 rounded-full bg-[#ff6b9d]"></span>
+          </button>
+
+          <button onclick="setTheme('ocean')" data-theme="ocean" title="Ocean" class="theme-btn w-8 h-8 rounded-full border-2 border-transparent hover:border-dynamic-accent bg-[#003d47] flex items-center justify-center transition-transform">
+             <span class="w-3 h-3 rounded-full bg-[#006d77]"></span>
+          </button>
+
+          <button onclick="setTheme('nature')" data-theme="nature" title="Nature" class="theme-btn w-8 h-8 rounded-full border-2 border-transparent hover:border-dynamic-accent bg-[#112d21] flex items-center justify-center transition-transform">
+             <span class="w-3 h-3 rounded-full bg-[#2d6a4f]"></span>
+          </button>
+
+          <button onclick="setTheme('lavender')" data-theme="lavender" title="Lavender" class="theme-btn w-8 h-8 rounded-full border-2 border-transparent hover:border-dynamic-accent bg-[#2b2438] flex items-center justify-center transition-transform">
+             <span class="w-3 h-3 rounded-full bg-[#9d84b7]"></span>
+          </button>
+
+          <button onclick="setTheme('fire')" data-theme="fire" title="Fire" class="theme-btn w-8 h-8 rounded-full border-2 border-transparent hover:border-dynamic-accent bg-[#330000] flex items-center justify-center transition-transform">
+             <span class="w-3 h-3 rounded-full bg-[#ff4500]"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-dynamic-accent text-dynamic-bg pt-20 pb-12 px-6 sm:px-8 overflow-hidden relative selection:bg-[var(--tech-bg)] selection:text-[var(--tech-accent)] transition-colors duration-400">
+      <div class="max-w-7xl mx-auto relative z-10 grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
+        
+        <div class="md:col-span-2">
+          <div class="flex items-center gap-3 mb-6 relative z-20">
+             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1020 160" class="h-10 w-auto" style="fill: var(--tech-bg); stroke: var(--tech-bg);">
+               <path d="
+                 M 28 60 L 28 127
+                 M 28 60 L 72 60
+                 M 28 93 L 65 93
+                 M 28 127 L 72 127
+               " fill="none" stroke-width="16" stroke-linecap="round"/>
+               <text x="84" y="135" font-family="'Syne', sans-serif" font-size="115" font-weight="800" letter-spacing="-2" stroke="none">scape</text>
+               <path d="
+                 M 470 127 L 470 76 C 470 54, 504 54, 504 76 L 504 127
+                 M 504 76 C 504 54, 538 54, 538 76 L 538 127
+               " fill="none" stroke-width="16" stroke-linecap="round"/>
+               <text x="550" y="135" font-family="'Syne', sans-serif" font-size="115" font-weight="800" letter-spacing="-2" stroke="none">aster</text>
+             </svg>
+          </div>
+          <p class="opacity-60 text-sm max-w-sm font-grotesk relative z-20">
+            {lang === 'es'
+              ? 'Infraestructura de software para escape rooms que buscan eficiencia y control absoluto.'
+              : 'Software infrastructure for escape rooms seeking efficiency and absolute control.'}
+          </p>
+        </div>
+        
+        <div class="font-mono text-xs">
+          <h4 class="opacity-40 uppercase tracking-widest mb-4">System</h4>
+          <ul class="space-y-3">
+            <li><a href="#features" class="hover:opacity-60 transition-opacity">{lang === 'es' ? 'Características' : 'Features'}</a></li>
+            <li><a href="#compare" class="hover:opacity-60 transition-opacity">{lang === 'es' ? 'Comparativa' : 'Compare'}</a></li>
+            <li><a href="#pricing" class="hover:opacity-60 transition-opacity">{lang === 'es' ? 'Precios' : 'Pricing'}</a></li>
+            <li><a href="#faq" class="hover:opacity-60 transition-opacity">FAQ</a></li>
+            <li><a href="https://manager.escapemaster.es" class="hover:opacity-60 transition-opacity">{lang === 'es' ? 'Iniciar Sesión' : 'Login'}</a></li>
+          </ul>
+        </div>
+        
+        <div class="font-mono text-xs">
+          <h4 class="opacity-40 uppercase tracking-widest mb-4">Legal</h4>
+          <ul class="space-y-3">
+            <li><a href={`/${lang}/privacy`} class="hover:opacity-60 transition-opacity">{lang === 'es' ? 'Privacidad' : 'Privacy Policy'}</a></li>
+            <li><a href={`/${lang}/terms`} class="hover:opacity-60 transition-opacity">{lang === 'es' ? 'Términos' : 'Terms of Service'}</a></li>
+            <li><a href="mailto:hello@escapemaster.es" class="hover:opacity-60 transition-opacity">{lang === 'es' ? 'Contacto' : 'Contact'}</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Giant Pixel/Dot Brand Name -->
+      <div class="max-w-7xl mx-auto border-t border-[var(--tech-bg)]/20 pt-12 text-center select-none opacity-40 relative">
+         <h1 class="font-display uppercase font-black text-[12vw] leading-none tracking-tighter text-transparent" style="-webkit-text-stroke: 1px var(--tech-bg);">
+           MANAGER.
+         </h1>
+      </div>
+    </footer>
+  </div>
+  
+  <style>
+    /* CSS specific keyframes for marquee */
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .animate-\[marquee_20s_linear_infinite\] {
+      animation: marquee 20s linear infinite;
+    }
+  </style>
+</BareLayout>

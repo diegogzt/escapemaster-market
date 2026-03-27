@@ -1,0 +1,388 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { Button } from '../../components/ui/Button';
+import UserDashboard from '../../components/react/UserDashboard';
+import { EnterpriseDashboard } from '../../components/react/EnterpriseDashboard';
+
+const { lang: langParam } = Astro.params;
+const lang = langParam || 'es';
+
+const t = lang === 'en' ? {
+  title: 'My Profile',
+  subtitle: 'Manage your account and bookings',
+  menu: {
+    dashboard: 'Dashboard',
+    bookings: 'My Bookings',
+    history: 'Game History',
+    favorites: 'Favorites',
+    achievements: 'Achievements',
+    credits: 'Credits & Vouchers',
+    notifications: 'Notifications',
+    settings: 'Settings',
+    editProfile: 'Edit Profile',
+    logout: 'Log Out'
+  },
+  stats: {
+    played: 'Games Played',
+    escaped: 'Escaped',
+    rate: 'Escape Rate',
+    xp: 'Total XP'
+  },
+  rank: {
+    newbie: 'Newbie',
+    solver: 'Solver',
+    escapemaster: 'EscapeMaster'
+  }
+} : {
+  title: 'Mi Perfil',
+  subtitle: 'Gestiona tu cuenta y reservas',
+  menu: {
+    dashboard: 'Panel',
+    bookings: 'Mis Reservas',
+    history: 'Historial de Juegos',
+    favorites: 'Favoritos',
+    achievements: 'Logros',
+    credits: 'Créditos y Vales',
+    notifications: 'Notificaciones',
+    settings: 'Ajustes',
+    editProfile: 'Editar Perfil',
+    logout: 'Cerrar Sesión'
+  },
+  stats: {
+    played: 'Partidas',
+    escaped: 'Escapados',
+    rate: 'Tasa de Escape',
+    xp: 'XP Total'
+  },
+  rank: {
+    newbie: 'Novato',
+    solver: 'Resolutor',
+    escapemaster: 'EscapeMaster'
+  }
+};
+
+const menuItems = [
+  { key: 'history', icon: 'clock', href: `/${lang}/profile/history` },
+  { key: 'favorites', icon: 'heart', href: `/${lang}/profile/favorites` },
+  { key: 'notifications', icon: 'bell', href: `/${lang}/profile/notifications` },
+  { key: 'editProfile', icon: 'user', href: `/${lang}/profile/edit` },
+  { key: 'settings', icon: 'settings', href: `/${lang}/profile/settings` },
+];
+
+const icons: Record<string, string> = {
+  clock: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  heart: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>',
+  bell: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
+  user: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  settings: '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>',
+};
+---
+
+<Layout title={`${t.title} | EscapeMaster`}>
+  <main class="min-h-screen pt-24 sm:pt-32 pb-24 sm:pb-20 bg-[#FBF9F1]">
+    <div class="max-container px-3 sm:px-4">
+      <!-- Loading State -->
+      <div id="loadingState" class="flex items-center justify-center py-32 sm:py-40">
+        <div class="animate-spin rounded-full h-10 sm:h-12 w-10 sm:w-12 border-b-2 border-[#1F6357]"></div>
+      </div>
+
+      <!-- Profile Content -->
+      <div id="profileContent" class="hidden animate-fade-in">
+        <!-- Enterprise Panel (solo cuentas empresa) -->
+        <div id="enterprisePanel" class="hidden">
+          <div class="bg-white rounded-2xl border border-tropical-secondary/15 p-6 sm:p-8">
+            <div class="text-xs font-black uppercase tracking-widest text-tropical-text/50">Empresa</div>
+            <h2 class="mt-2 text-2xl sm:text-3xl font-black text-tropical-text">Panel de empresa</h2>
+            <p class="mt-2 text-sm text-tropical-text/70">Accede al Manager para gestionar tu organización, salas, reservas y tarifas.</p>
+
+            <div class="mt-5 rounded-xl border border-tropical-secondary/10 bg-tropical-card/40 p-4">
+              <div class="text-[10px] font-black uppercase tracking-widest text-tropical-text/50">Organización</div>
+              <div class="mt-1 flex items-center justify-between gap-3">
+                <div id="enterpriseOrgName" class="font-black text-tropical-text">—</div>
+                <span id="enterpriseOrgStatus" class="hidden text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border">—</span>
+              </div>
+              <div id="enterpriseOrgMeta" class="mt-1 text-sm text-tropical-text/70">—</div>
+            </div>
+            <div class="mt-6 flex flex-col sm:flex-row gap-3">
+              <a href="https://manager.escapemaster.es" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center h-11 px-5 rounded-xl bg-tropical-primary text-white font-bold touch-manipulation">
+                Abrir Manager
+              </a>
+              <a href={`/${lang}/onboarding`} class="inline-flex items-center justify-center h-11 px-5 rounded-xl border border-tropical-secondary/20 text-tropical-text font-bold bg-white touch-manipulation">
+                Revisar onboarding
+              </a>
+            </div>
+          </div>
+
+          <EnterpriseDashboard client:load lang={lang} />
+        </div>
+
+        <div id="customerProfile" class="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          
+          <!-- Sidebar -->
+          <div class="w-full lg:w-80 shrink-0">
+            <!-- User Card -->
+            <div class="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-[#E8F1EF] p-4 sm:p-6 mb-4 sm:mb-6">
+              <div class="text-center">
+                <div class="relative inline-block">
+                  <div id="avatarPreview" class="w-20 sm:w-24 h-20 sm:h-24 bg-[#4DB8A8] rounded-full mx-auto mb-3 sm:mb-4 flex items-center justify-center text-white text-2xl sm:text-3xl font-bold overflow-hidden">
+                    <span id="initials">U</span>
+                  </div>
+                  <div id="rankBadge" class="absolute -bottom-1 -right-1 bg-amber-500 text-white text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-medium">
+                    Novato
+                  </div>
+                </div>
+                <h2 id="profileName" class="text-lg sm:text-xl font-bold text-[#1F6357] mt-2">Cargando...</h2>
+                <p id="profileEmail" class="text-xs sm:text-sm text-gray-500">...</p>
+              </div>
+
+
+              <!-- XP Progress -->
+              <div class="mt-5 sm:mt-6">
+                <div class="flex justify-between text-[10px] sm:text-xs text-gray-500 mb-1">
+                  <span id="currentRank">Novato</span>
+                  <span id="nextRank">→ Resolutor</span>
+                </div>
+                <div class="h-1.5 sm:h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div id="xpProgress" class="h-full bg-amber-400 transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <p class="text-[10px] sm:text-xs text-gray-400 mt-1 text-center" id="xpToNext">0 / 500 XP</p>
+              </div>
+            </div>
+
+            <!-- Menu -->
+            <div class="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-[#E8F1EF] overflow-hidden">
+              <nav class="divide-y divide-gray-100">
+                {menuItems.map(item => (
+                  <a 
+                    href={item.href} 
+                    class="flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 hover:bg-[#FBF9F1] active:bg-[#E8F1EF] transition-colors text-gray-700 hover:text-[#1F6357]"
+                  >
+                    <span class="text-gray-400" set:html={icons[item.icon]} />
+                    <span class="font-medium text-sm sm:text-base">{t.menu[item.key as keyof typeof t.menu]}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-auto text-gray-300"><path d="m9 18 6-6-6-6"/></svg>
+                  </a>
+                ))}
+                <button 
+                  id="switchToEnterpriseBtn"
+                  class="w-full flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 hover:bg-tropical-primary/5 active:bg-tropical-primary/10 transition-colors text-tropical-primary"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="10" width="20" height="12" rx="2" ry="2"/><path d="M7 10V5a5 5 0 0 1 10 0v5"/></svg>
+                  <span class="font-bold text-sm sm:text-base">{lang === 'en' ? 'Switch to Business Account' : 'Convertir a cuenta de Empresa'}</span>
+                </button>
+                <button 
+                  id="logoutBtn"
+                  class="w-full flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 hover:bg-red-50 active:bg-red-100 transition-colors text-red-600"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+                  <span class="font-medium text-sm sm:text-base">{t.menu.logout}</span>
+                </button>
+              </nav>
+            </div>
+          </div>
+
+          <!-- Main Content -->
+          <div class="flex-1 min-w-0">
+            <UserDashboard client:load lang={lang} />
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script>
+  import { auth } from '../../lib/auth';
+
+  const rankThresholds = {
+    newbie: 0,
+    solver: 500,
+    escapemaster: 2000
+  };
+
+  const rankLabels: Record<string, Record<string, string>> = {
+    es: { newbie: 'Novato', solver: 'Resolutor', escapemaster: 'EscapeMaster' },
+    en: { newbie: 'Newbie', solver: 'Solver', escapemaster: 'EscapeMaster' }
+  };
+
+  const rankColors: Record<string, string> = {
+    newbie: 'bg-gray-500',
+    solver: 'bg-amber-500',
+    escapemaster: 'bg-purple-600'
+  };
+
+  async function initProfile() {
+    const lang = window.location.pathname.split('/')[1] || 'es';
+    const session = await auth.getSession();
+    
+    if (!session.user) {
+      window.location.href = `/${lang}/login`;
+      return;
+    }
+
+    const { user } = session;
+
+    // Update UI
+    document.getElementById('loadingState')?.classList.add('hidden');
+    document.getElementById('profileContent')?.classList.remove('hidden');
+
+    // Enterprise profile: UI distinta (no stats de jugador)
+    if (user.account_type === 'enterprise') {
+      document.getElementById('customerProfile')?.classList.add('hidden');
+      document.getElementById('enterprisePanel')?.classList.remove('hidden');
+
+      // Load organization summary
+      try {
+        const token = localStorage.getItem('em_token');
+        const res = await fetch('/api/enterprise/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const org = data?.data?.organization;
+          const nameEl = document.getElementById('enterpriseOrgName');
+          const metaEl = document.getElementById('enterpriseOrgMeta');
+          const statusEl = document.getElementById('enterpriseOrgStatus');
+
+          if (nameEl) nameEl.textContent = org?.name || 'Sin organización asignada';
+
+          if (metaEl) {
+            const parts: string[] = [];
+            if (org?.slug) parts.push(`slug: ${org.slug}`);
+            if (org?.city) parts.push(`Ciudad: ${org.city}`);
+            metaEl.textContent = parts.length ? parts.join(' · ') : 'Completa los datos en el onboarding o en el Manager';
+          }
+
+          if (statusEl && org && typeof org.is_active === 'boolean') {
+            statusEl.classList.remove('hidden');
+            if (org.is_active) {
+              statusEl.textContent = 'Activa';
+              statusEl.className = 'text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border bg-tropical-secondary/10 text-tropical-secondary border-tropical-secondary/20';
+            } else {
+              statusEl.textContent = 'Pendiente';
+              statusEl.className = 'text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border bg-tropical-accent/10 text-tropical-accent border-tropical-accent/20';
+            }
+          }
+        }
+      } catch {}
+
+      return;
+    }
+    
+    const nameEl = document.getElementById('profileName');
+    const emailEl = document.getElementById('profileEmail');
+    const initialsEl = document.getElementById('initials');
+
+    if (nameEl) nameEl.textContent = user.full_name;
+    if (emailEl) emailEl.textContent = user.email;
+    if (initialsEl) initialsEl.textContent = user.full_name?.charAt(0).toUpperCase() || 'U';
+
+    // Load player stats
+    try {
+      const token = localStorage.getItem('em_token');
+      const response = await fetch('/api/players/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        const player = await response.json();
+        
+        // Update stats
+        const statPlayed = document.getElementById('statPlayed');
+        const statEscaped = document.getElementById('statEscaped');
+        const statXP = document.getElementById('statXP');
+        const statRate = document.getElementById('statRate');
+        
+        const gamesPlayed = player.rooms_played ?? player.total_games_played ?? 0;
+        const roomsEscaped = player.rooms_escaped ?? player.total_escapes ?? 0;
+        const xp = player.total_xp ?? player.xp ?? 0;
+
+        if (statPlayed) statPlayed.textContent = String(gamesPlayed);
+        if (statEscaped) statEscaped.textContent = String(roomsEscaped);
+        if (statXP) statXP.textContent = Number(xp).toLocaleString();
+        
+        const rate = gamesPlayed > 0 
+          ? Math.round((roomsEscaped / gamesPlayed) * 100)
+          : 0;
+        if (statRate) statRate.textContent = `${rate}%`;
+
+        // Update rank
+        const rank = player.rank || 'newbie';
+        const rankLabel = rankLabels[lang]?.[rank] || rank;
+        const rankBadge = document.getElementById('rankBadge');
+        if (rankBadge) {
+          rankBadge.textContent = rankLabel;
+          rankBadge.className = `absolute -bottom-1 -right-1 ${rankColors[rank]} text-white text-xs px-2 py-0.5 rounded-full font-medium`;
+        }
+        const currentRankEl = document.getElementById('currentRank');
+        if (currentRankEl) currentRankEl.textContent = rankLabel;
+
+        // Calculate XP progress
+        const xpValue = Number(xp) || 0;
+        let nextRankKey = 'solver';
+        let nextRankThreshold = 500;
+        let prevThreshold = 0;
+
+        if (rank === 'solver') {
+          nextRankKey = 'escapemaster';
+          nextRankThreshold = 2000;
+          prevThreshold = 500;
+        } else if (rank === 'escapemaster') {
+          nextRankKey = 'escapemaster';
+          nextRankThreshold = xpValue;
+          prevThreshold = 2000;
+        }
+
+        const nextRankLabel = rankLabels[lang]?.[nextRankKey] || nextRankKey;
+        const nextRankEl = document.getElementById('nextRank');
+        if (nextRankEl) nextRankEl.textContent = rank !== 'escapemaster' ? `→ ${nextRankLabel}` : '🏆 MAX';
+        
+        const progress = rank !== 'escapemaster'
+          ? Math.min(100, ((xpValue - prevThreshold) / (nextRankThreshold - prevThreshold)) * 100)
+          : 100;
+        const xpProgressEl = document.getElementById('xpProgress') as HTMLElement;
+        if (xpProgressEl) xpProgressEl.style.width = `${progress}%`;
+        
+        const xpToNextEl = document.getElementById('xpToNext');
+        if (xpToNextEl) {
+          xpToNextEl.textContent = rank !== 'escapemaster'
+            ? `${xpValue} / ${nextRankThreshold} XP`
+              : `${xpValue} XP`;
+        }
+      }
+    } catch (err) {
+      console.error('Error loading player data:', err);
+    }
+
+    // Logout button
+    document.getElementById('logoutBtn')?.addEventListener('click', () => {
+      auth.logout();
+    });
+
+    // Switch to enterprise button
+    const switchBtn = document.getElementById('switchToEnterpriseBtn');
+    if (switchBtn) {
+      switchBtn.addEventListener('click', async () => {
+        const confirmed = confirm(lang === 'en' 
+          ? 'Are you sure you want to convert your account to a Business account? This will allow you to manage escape rooms and organizations.' 
+          : '¿Estás seguro de que quieres convertir tu cuenta en una cuenta de Empresa? Esto te permitirá gestionar salas de escape y organizaciones.');
+        
+        if (confirmed) {
+          try {
+            switchBtn.textContent = lang === 'en' ? 'Converting...' : 'Convirtiendo...';
+            switchBtn.disabled = true;
+            await auth.switchToEnterprise();
+            window.location.href = `/${lang}/onboarding`;
+          } catch (err: any) {
+            console.error('Switch to enterprise error:', err);
+            alert(err.message || (lang === 'en' ? 'Error converting account' : 'Error al convertir la cuenta'));
+            switchBtn.textContent = lang === 'en' ? 'Switch to Business Account' : 'Convertir a cuenta de Empresa';
+            switchBtn.disabled = false;
+          }
+        }
+      });
+    }
+  }
+
+  initProfile();
+</script>

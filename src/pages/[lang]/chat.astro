@@ -1,0 +1,17 @@
+---
+export const prerender = false;
+import Layout from '../../layouts/Layout.astro';
+import { ChatWidget } from '../../components/react/ChatWidget';
+import { ui } from '../../i18n/ui';
+
+const { lang = 'es' } = Astro.params;
+const t = ui[lang as keyof typeof ui] || ui.es;
+---
+
+<Layout title={`${lang === 'en' ? 'Messages' : 'Mensajes'} | EscapeMaster`}>
+  <main class="pt-20 sm:pt-24 pb-20 sm:pb-6">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6">
+      <ChatWidget client:load lang={lang} />
+    </div>
+  </main>
+</Layout>

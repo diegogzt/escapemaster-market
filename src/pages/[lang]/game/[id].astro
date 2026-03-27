@@ -1,0 +1,573 @@
+---
+// apps/marketplace/src/pages/[lang]/game/[id].astro
+export const prerender = false;
+
+import { query } from '../../../lib/db';
+import '../../../styles/global.css';
+import { ui } from '../../../i18n/ui';
+import { Header } from '../../../components/Header';
+import { Badge } from '../../../components/ui/Badge';
+import { BookingWidget } from '../../../components/react/BookingWidget';
+import { Clock, Users, Zap, AlertTriangle, CheckCircle, StopCircle, Search, MapPin, Star } from 'lucide-react';
+import { getDefaultRoomGallery } from '../../../lib/default-room-images';
+
+const { lang = 'es', id } = Astro.params;
+const t = (key: keyof typeof ui['es']) => (ui[lang as keyof typeof ui] || ui['es'])[key] || key;
+const defaultGameImage = 'https://images.unsplash.com/photo-1526498460520-4c246339dccb?auto=format&fit=crop&w=1200&q=80';
+
+console.log(`[Game Detail] Fetching room with id: ${id}`);
+
+if (!id) {
+    return Astro.redirect(`/${lang}`);
+}
+
+let game = null;
+let reviews = [];
+let isVerified = false;
+let orgName = '';
+try {
+    // 1. Try to fetch from internal/verified rooms table
+    const { rows } = await query(`
+        SELECT r.*, o.name as org_name 
+        FROM rooms r 
+        LEFT JOIN organizations o ON o.id = r.organization_id 
+        WHERE r.id = $1
+    `, [id]);
+    
+    if (rows.length > 0) {
+        const room = rows[0];
+        orgName = room.org_name || '';
+        
+        // Determine verification status
+        const hasOrganization = !!room.organization_id;
+        const hasErdConfig = !!(room.erd_game_id && room.erd_token && room.booking_manager === 'erdirector');
+        const hasInternalBooking = room.booking_manager === 'internal';
+        const hasExternalBooking = room.booking_manager === 'external' && !!(room.erd_url || room.external_url);
+        isVerified = hasOrganization && (hasErdConfig || hasInternalBooking || hasExternalBooking);
+        
+        // Fetch reviews
+        try {
+            const { rows: reviewRows } = await query(`
+                SELECT rev.*, p.display_name as player_name, p.avatar_url 
+                FROM reviews rev
+                LEFT JOIN players p ON p.id = rev.player_id
+                WHERE rev.room_id = $1 AND rev.is_public = true
+                ORDER BY rev.created_at DESC
+                LIMIT 5
+            `, [id]);
+            reviews = reviewRows;
+        } catch (revErr) {
+            console.log("[Game Detail] Reviews error:", revErr.message);
+        }
+
+        const defaultGallery = getDefaultRoomGallery(room.id);
+        const mergedImages = room.image_url ? [room.image_url, ...defaultGallery.slice(1)] : defaultGallery;
+
+        game = {
+            id: room.id,
+            name: room.name,
+            description: room.description,
+            city: room.city || 'Ciudad',
+            address: room.address || '',
+            latitude: room.latitude,
+            longitude: room.longitude,
+            players_min: room.capacity_min || 2,
+            players_max: room.capacity || 6,
+            duration: room.duration_minutes || 60,
+            difficulty: room.difficulty_level ? 'Nivel ' + room.difficulty_level : 'M',
+            price_min: room.price_per_person || 0,
+            images: mergedImages,
+            min_age: room.min_age,
+            max_age: room.max_age,
+            min_age_accompanied: room.min_age_accompanied,
+            min_age_alone: room.min_age_alone,
+            fear_level: room.fear_level,
+            physical_rating: room.physical_rating,
+            is_family_friendly: room.is_family_friendly,
+            with_actors: room.with_actors,
+            with_fathers: room.with_fathers,
+            with_monitor: room.with_monitor,
+            supports_video_recording: room.supports_video_recording,
+            supports_actor_mode: room.supports_actor_mode,
+            booking_url: room.erd_url || room.external_url,
+            website_url: room.website_url,
+            phone: room.phone,
+            email: room.email,
+            rating: parseFloat(room.average_rating) || 0,
+            reviews_count: room.total_reviews || 0,
+            themes: room.themes || [],
+            pricing_model: room.pricing_model || 'per_person',
+            price_per_session: room.price_per_session || 0,
+            booking_manager: room.booking_manager,
+            erd_game_id: room.erd_game_id,
+            erd_token: room.erd_token
+
+        };
+    }
+} catch (e: any) {
+    console.error("[Game Detail] Error:", e.message);
+}
+
+if (!game) {
+    console.log(`[Game Detail] Room not found anywhere, redirecting to home`);
+    return Astro.redirect(`/${lang}`);
+}
+
+const galleryImages = Array.isArray(game.images) && game.images.length > 0
+    ? game.images
+    : [defaultGameImage];
+
+const plainDescription = (game.description || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const descriptionPreviewLimit = 420;
+const isDescriptionLong = plainDescription.length > descriptionPreviewLimit;
+const shortDescription = isDescriptionLong
+    ? `${plainDescription.slice(0, descriptionPreviewLimit).trim()}…`
+    : plainDescription;
+
+const bookingUrl = (game.booking_url && game.booking_url.startsWith('http')) 
+    ? game.booking_url 
+    : null;
+
+import { SingleGameMap } from '../../../components/react/SingleGameMap';
+---
+
+<html lang={lang}>
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="theme-color" content="#1F6357" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+		<title>{game.name} | EscapeMaster</title>
+	</head>
+	<body class="bg-white text-tropical-text font-sans selection:bg-tropical-primary/10">
+        <Header 
+            lang={lang} 
+            translations={{
+                search: t('nav.search'),
+                offers: t('nav.offers'),
+                blog: t('nav.blog'),
+                owner: t('nav.owner'),
+                login: t('nav.login')
+            }} 
+            client:load
+        />
+
+        <main class="pt-16 sm:pt-24 pb-24 sm:pb-12 max-w-7xl mx-auto px-4">
+            
+            {/* Breadcrumb / Back */}
+            <div class="mb-4 sm:mb-6">
+                <a href={`/${lang}/search`} class="text-tropical-primary hover:underline font-bold transition-colors text-sm sm:text-base touch-manipulation inline-flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    {t('game.back')}
+                </a>
+            </div>
+
+            {/* Hero & Details */}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-12">
+                
+                {/* Images */}
+                <div class="space-y-4">
+                    <div class="rounded-xl sm:rounded-2xl overflow-hidden shadow-xl h-56 sm:h-80 lg:h-[400px] bg-slate-200">
+                        {galleryImages && galleryImages.length > 0 ? (
+                            <img
+                                id="game-gallery-main"
+                                src={galleryImages[0]}
+                                alt={game.name}
+                                class="w-full h-full object-cover"
+                                loading="eager"
+                            />
+                        ) : (
+                            <div class="w-full h-full flex items-center justify-center text-4xl sm:text-6xl text-tropical-secondary/20 bg-tropical-card">📷</div>
+                        )}
+                    </div>
+
+                    {galleryImages.length > 1 && (
+                        <div class="grid grid-cols-4 sm:grid-cols-6 gap-2 sm:gap-3" id="game-gallery-thumbs">
+                            {galleryImages.map((imageUrl: string, index: number) => (
+                                <button
+                                    type="button"
+                                    class={`rounded-lg overflow-hidden border-2 transition-all ${index === 0 ? 'border-tropical-primary' : 'border-transparent hover:border-tropical-secondary/60'}`}
+                                    data-gallery-thumb
+                                    data-image={imageUrl}
+                                    aria-label={`${game.name} ${index + 1}`}
+                                >
+                                    <img src={imageUrl} alt={`${game.name} ${index + 1}`} class="w-full h-14 sm:h-16 object-cover" loading="lazy" />
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Map Section */}
+                    {game.latitude && game.longitude && (
+                        <div class="mt-8">
+                            <h3 class="text-xl font-bold text-tropical-primary mb-4 flex items-center gap-2">
+                                <MapPin size={20} className="text-tropical-secondary" />
+                                {t('game.location')}
+                            </h3>
+                            <SingleGameMap 
+                                latitude={game.latitude} 
+                                longitude={game.longitude} 
+                                name={game.name} 
+                                city={game.city} 
+                                lang={lang}
+                                client:visible 
+                            />
+                        </div>
+                    )}
+                </div>
+
+                {/* Info */}
+                <div class="space-y-4 sm:space-y-6">
+                    <div>
+                        <Badge variant="tropical" className="mb-2 bg-tropical-secondary/20 text-tropical-secondary border-none text-xs sm:text-sm">{game.city}</Badge>
+                        <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black text-tropical-primary font-serif leading-tight">{game.name}</h1>
+                        <div class="flex items-center gap-2 mt-2">
+                            <div class="flex items-center gap-1">
+                                <span class="text-yellow-500 flex italic">
+                                    {[...Array(5)].map((_, i) => (
+                                        <svg key={i} xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill={i < Math.floor(game.rating) ? "currentColor" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class={i < Math.floor(game.rating) ? "text-yellow-500" : "text-gray-300"}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                    ))}
+                                </span>
+                                <span class="font-bold text-tropical-text ml-1">{game.rating.toFixed(1)}</span>
+                            </div>
+                            <span class="text-tropical-text/40 text-sm">•</span>
+                            <span class="text-tropical-text/60 text-sm font-medium">{game.reviews_count} {t('game.reviews')}</span>
+                            {isVerified && (
+                                <>
+                                    <span class="text-tropical-text/40 text-sm">•</span>
+                                    <span class="bg-emerald-500/10 text-emerald-600 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                        <CheckCircle size={10} /> {t('game.verified_room')}
+                                    </span>
+                                </>
+                            )}
+                        </div>
+
+                        <div class="text-sm sm:text-xl text-tropical-text/60 mt-4 font-medium flex flex-wrap gap-2 sm:gap-4 items-center">
+                            <span class="flex items-center gap-1"><Clock size={16} className="text-tropical-secondary" /> {game.duration} {t('game.duration')}</span>
+                            <span class="flex items-center gap-1"><Users size={16} className="text-tropical-secondary" /> {game.players_min}-{game.players_max} {t('game.players')}</span>
+                            <span class="flex items-center gap-1"><Zap size={16} className="text-tropical-secondary" /> {game.difficulty}</span>
+                        </div>
+
+                        <div class="pt-4 border-t border-tropical-secondary/10 mt-4 sm:mt-6">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-2xl sm:text-3xl font-bold text-tropical-primary">
+                                    {game.pricing_model === 'per_session' 
+                                        ? `${game.price_per_session}€` 
+                                        : (game.price_min > 0 ? `${game.price_min}€` : (lang === 'en' ? 'Contact us' : 'Consultar'))}
+                                </span>
+                                <span class="text-xs sm:text-sm text-tropical-text/40">
+                                    {game.pricing_model === 'per_session' 
+                                        ? (lang === 'en' ? '/ session' : '/ sesión')
+                                        : `${t('game.price_group')} (${t('game.price_from')})`}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        {/* Rich Metadata Grid */}
+                        <div class="grid grid-cols-2 gap-3 sm:gap-4 mt-4 sm:mt-6">
+                            {(game.min_age || game.max_age) && (
+                                <div class="bg-white p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-tropical-secondary/10 shadow-sm">
+                                    <div class="text-[9px] sm:text-[10px] uppercase font-black text-tropical-text/40 mb-0.5 sm:mb-1">{t('game.age')}</div>
+                                    <div class="font-bold text-tropical-text text-xs sm:text-sm">{game.min_age ? `+${game.min_age}` : ''} {game.max_age ? (lang === 'en' ? `up to ${game.max_age}` : `hasta ${game.max_age}`) : (lang === 'en' ? 'years' : 'años')}</div>
+                                </div>
+                            )}
+                            {game.fear_level && game.fear_level !== 'none' && (
+                                <div class="bg-white p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-tropical-secondary/10 shadow-sm">
+                                    <div class="text-[9px] sm:text-[10px] uppercase font-black text-tropical-text/40 mb-0.5 sm:mb-1">{t('game.fear')}</div>
+                                    <div class="font-bold text-tropical-text capitalize text-xs sm:text-sm flex items-center gap-1">{game.fear_level === 'high' ? <><AlertTriangle size={14} className="text-red-500" /> {t('level.high')}</> : (game.fear_level === 'medium' ? <><AlertTriangle size={14} className="text-orange-500" /> {t('level.medium')}</> : <><AlertTriangle size={14} className="text-yellow-500" /> {t('level.tension')}</>)}</div>
+                                </div>
+                            )}
+                            {game.physical_rating && game.physical_rating !== 'none' && (
+                                <div class="bg-white p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-tropical-secondary/10 shadow-sm">
+                                    <div class="text-[9px] sm:text-[10px] uppercase font-black text-tropical-text/40 mb-0.5 sm:mb-1">{t('game.contact')}</div>
+                                    <div class="font-bold text-tropical-text capitalize text-xs sm:text-sm flex items-center gap-1">{game.physical_rating === 'high' ? <><StopCircle size={14} className="text-red-500" /> {t('level.high')}</> : (game.physical_rating === 'medium' ? <><AlertTriangle size={14} className="text-yellow-500" /> {t('level.medium')}</> : <><CheckCircle size={14} className="text-green-500" /> {t('level.low')}</>)}</div>
+                                </div>
+                            )}
+                             <div class="bg-white p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-tropical-secondary/10 shadow-sm col-span-2 lg:col-span-1">
+                                <div class="text-[9px] sm:text-[10px] uppercase font-black text-tropical-text/40 mb-0.5 sm:mb-1">{t('game.location')}</div>
+                                <div class="font-bold text-tropical-text text-xs sm:text-sm leading-tight truncate">{game.address}, {game.city}</div>
+                            </div>
+
+                            {game.min_age_accompanied && (
+                                <div class="bg-white p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-tropical-secondary/10 shadow-sm">
+                                    <div class="text-[9px] sm:text-[10px] uppercase font-black text-tropical-text/40 mb-0.5 sm:mb-1">{lang === 'en' ? 'Min age accompanied' : 'Edad mín. acompañado'}</div>
+                                    <div class="font-bold text-tropical-text text-xs sm:text-sm">{game.min_age_accompanied} {lang === 'en' ? 'years' : 'años'}</div>
+                                </div>
+                            )}
+
+                            {game.min_age_alone && (
+                                <div class="bg-white p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-tropical-secondary/10 shadow-sm">
+                                    <div class="text-[9px] sm:text-[10px] uppercase font-black text-tropical-text/40 mb-0.5 sm:mb-1">{lang === 'en' ? 'Min age alone' : 'Edad mín. solo'}</div>
+                                    <div class="font-bold text-tropical-text text-xs sm:text-sm">{game.min_age_alone} {lang === 'en' ? 'years' : 'años'}</div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div class="mt-4 sm:mt-6">
+                            <div class="text-[10px] sm:text-xs uppercase tracking-wide font-black text-tropical-text/50 mb-2">
+                                {lang === 'en' ? 'Experience details' : 'Detalles de experiencia'}
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                                <div class="bg-white p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-tropical-secondary/10 shadow-sm flex items-center justify-between gap-3">
+                                    <span class="text-xs sm:text-sm font-bold text-tropical-text">{lang === 'en' ? 'Family friendly' : 'Apta para familias'}</span>
+                                    <span class={`text-[10px] sm:text-xs font-black uppercase px-2 py-1 rounded-full ${game.is_family_friendly ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>{game.is_family_friendly ? (lang === 'en' ? 'Yes' : 'Sí') : (lang === 'en' ? 'No' : 'No')}</span>
+                                </div>
+
+                                <div class="bg-white p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-tropical-secondary/10 shadow-sm flex items-center justify-between gap-3">
+                                    <span class="text-xs sm:text-sm font-bold text-tropical-text">{lang === 'en' ? 'With actors' : 'Con actores'}</span>
+                                    <span class={`text-[10px] sm:text-xs font-black uppercase px-2 py-1 rounded-full ${game.with_actors ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>{game.with_actors ? (lang === 'en' ? 'Yes' : 'Sí') : (lang === 'en' ? 'No' : 'No')}</span>
+                                </div>
+
+                                <div class="bg-white p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-tropical-secondary/10 shadow-sm flex items-center justify-between gap-3">
+                                    <span class="text-xs sm:text-sm font-bold text-tropical-text">{lang === 'en' ? 'Parents allowed in room' : 'Con padres en sala'}</span>
+                                    <span class={`text-[10px] sm:text-xs font-black uppercase px-2 py-1 rounded-full ${game.with_fathers ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>{game.with_fathers ? (lang === 'en' ? 'Yes' : 'Sí') : (lang === 'en' ? 'No' : 'No')}</span>
+                                </div>
+
+                                <div class="bg-white p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-tropical-secondary/10 shadow-sm flex items-center justify-between gap-3">
+                                    <span class="text-xs sm:text-sm font-bold text-tropical-text">{lang === 'en' ? 'With monitor' : 'Con monitor'}</span>
+                                    <span class={`text-[10px] sm:text-xs font-black uppercase px-2 py-1 rounded-full ${game.with_monitor ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>{game.with_monitor ? (lang === 'en' ? 'Yes' : 'Sí') : (lang === 'en' ? 'No' : 'No')}</span>
+                                </div>
+
+                                <div class="bg-white p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-tropical-secondary/10 shadow-sm flex items-center justify-between gap-3">
+                                    <span class="text-xs sm:text-sm font-bold text-tropical-text">{lang === 'en' ? 'Video recording support' : 'Soporta grabación de video'}</span>
+                                    <span class={`text-[10px] sm:text-xs font-black uppercase px-2 py-1 rounded-full ${game.supports_video_recording ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>{game.supports_video_recording ? (lang === 'en' ? 'Yes' : 'Sí') : (lang === 'en' ? 'No' : 'No')}</span>
+                                </div>
+
+                                <div class="bg-white p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-tropical-secondary/10 shadow-sm flex items-center justify-between gap-3">
+                                    <span class="text-xs sm:text-sm font-bold text-tropical-text">{lang === 'en' ? 'Actor mode support' : 'Soporta modo actores'}</span>
+                                    <span class={`text-[10px] sm:text-xs font-black uppercase px-2 py-1 rounded-full ${game.supports_actor_mode ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>{game.supports_actor_mode ? (lang === 'en' ? 'Yes' : 'Sí') : (lang === 'en' ? 'No' : 'No')}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        {game.themes?.map((thm: any) => (
+                             <span className="text-[10px] sm:text-xs uppercase font-bold text-tropical-secondary bg-tropical-card px-2.5 sm:px-3 py-1 rounded-full border border-tropical-secondary/20">
+                                {typeof thm === 'string' ? thm : (thm.theme?.name || thm.name)}
+                            </span>
+                        ))}
+                    </div>
+
+                    <div class="space-y-2">
+                        <h2 class="text-base sm:text-lg font-black text-tropical-primary uppercase tracking-wide">
+                            {lang === 'en' ? 'Description' : 'Descripción'}
+                        </h2>
+                        <p class="text-sm sm:text-base text-tropical-text/80 leading-relaxed max-w-xl">
+                            {shortDescription || t('game.no_description')}
+                        </p>
+
+                        {isDescriptionLong && (
+                            <details class="max-w-xl">
+                                <summary class="cursor-pointer text-sm font-bold text-tropical-primary hover:text-tropical-secondary transition-colors select-none">
+                                    {lang === 'en' ? 'Read full description' : 'Leer descripción completa'}
+                                </summary>
+                                <div class="mt-2 text-sm sm:text-base text-tropical-text/75 leading-relaxed prose prose-slate prose-sm sm:prose-base">
+                                    <Fragment set:html={game.description || t('game.no_description')} />
+                                </div>
+                            </details>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Booking Section */}
+            <section class="mt-8 sm:mt-16">
+                {isVerified && game.booking_manager === 'internal' ? (
+                    <BookingWidget 
+                        roomId={game.id} 
+                        roomName={game.name}
+                        orgName={orgName}
+                        pricePerPerson={game.price_min}
+                        pricingModel={game.pricing_model}
+                        pricePerSession={game.price_per_session}
+                        duration={game.duration}
+                        capacityMin={game.players_min}
+                        capacityMax={game.players_max}
+                        city={game.city}
+                        lang={lang} 
+                        client:visible 
+                    />
+                ) : isVerified && game.booking_manager === 'erdirector' && game.erd_game_id && game.erd_token ? (
+                    <div class="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-tropical-secondary/20 p-2 sm:p-4 overflow-hidden min-h-[600px]">
+                        <div id="app" data-type="booking" data-calendarstyle="Light" data-textstyle="Dark" data-game={game.erd_game_id.replace(/\s+/g, '')} data-calendar={game.erd_game_id.replace(/\s+/g, '')} data-lang={lang} data-token={game.erd_token}></div>
+                        <script src="https://erdpanel.com/dist/build.js" is:inline></script>
+                    </div>
+                ) : game.booking_manager === 'external' && bookingUrl ? (
+                    <div class="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-tropical-secondary/20 overflow-hidden">
+                        <div class="bg-tropical-primary p-4 sm:p-6 text-white">
+                            <h2 class="text-lg sm:text-xl font-bold">{t('booking.external')}</h2>
+                        </div>
+                        <div class="p-6 sm:p-8">
+                            <div class="text-center space-y-4 sm:space-y-6 max-w-md mx-auto">
+                                <p class="text-tropical-text/60 text-sm sm:text-base">
+                                    {t('booking.external_desc')}
+                                </p>
+                                <a
+                                    href={bookingUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-4 bg-tropical-accent text-white font-bold rounded-xl hover:bg-tropical-accent/90 transition-colors shadow-lg active:scale-[0.98] touch-manipulation text-base sm:text-lg w-full sm:w-auto"
+                                >
+                                    {t('booking.go_to_page')}
+                                </a>
+                                <div class="flex flex-col gap-3 justify-center pt-2">
+                                    {game.phone && (
+                                        <a href={`tel:${game.phone}`} class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-tropical-secondary text-white font-bold rounded-xl hover:bg-tropical-secondary/90 transition-colors shadow-lg active:scale-[0.98] touch-manipulation text-sm">
+                                            {t('booking.call')}
+                                        </a>
+                                    )}
+                                    {game.email && (
+                                        <a href={`mailto:${game.email}`} class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-tropical-primary text-white font-bold rounded-xl hover:bg-tropical-primary/90 transition-colors shadow-lg active:scale-[0.98] touch-manipulation text-sm">
+                                            {t('booking.email')}
+                                        </a>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div class="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-tropical-secondary/20 overflow-hidden">
+                        <div class="bg-tropical-primary p-4 sm:p-6 text-white">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                                <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                                    <h2 class="text-lg sm:text-xl font-bold">{t('booking.contact')}</h2>
+                                    <span class="bg-orange-500/20 text-orange-100 text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 rounded-full flex items-center gap-1 sm:gap-1.5">
+                                        {t('booking.unverified')}
+                                    </span>
+                                </div>
+                                {bookingUrl && (
+                                    <a href={bookingUrl} target="_blank" rel="noopener noreferrer" class="text-white/80 hover:text-white text-xs sm:text-sm font-bold touch-manipulation">
+                                        {t('booking.open_original')}
+                                    </a>
+                                )}
+                            </div>
+                        </div>
+                        <div class="p-6 sm:p-8">
+                            <div class="text-center space-y-4 sm:space-y-6 max-w-md mx-auto">
+                                <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto flex items-center justify-center rounded-2xl bg-gray-100">
+                                  <Search size={32} className="text-gray-400" />
+                                </div>
+                                <h3 class="text-xl sm:text-2xl font-bold text-tropical-text">{t('booking.external')}</h3>
+                                <p class="text-tropical-text/60 text-sm sm:text-base">
+                                    {t('booking.external_desc')}
+                                </p>
+                                <div class="flex flex-col gap-3 sm:gap-4 justify-center pt-4">
+                                    {bookingUrl && (
+                                        <a
+                                            href={bookingUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3 bg-tropical-primary text-white font-bold rounded-xl hover:bg-tropical-primary/90 transition-colors shadow-lg active:scale-[0.98] touch-manipulation text-sm sm:text-base"
+                                        >
+                                            {t('booking.go_to_page')}
+                                        </a>
+                                    )}
+                                    {game.phone && (
+                                        <a href={`tel:${game.phone}`} class="inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3 bg-tropical-secondary text-white font-bold rounded-xl hover:bg-tropical-secondary/90 transition-colors shadow-lg active:scale-[0.98] touch-manipulation text-sm sm:text-base">
+                                            {t('booking.call')}
+                                        </a>
+                                    )}
+                                    {game.email && (
+                                        <a href={`mailto:${game.email}`} class="inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-3 bg-tropical-accent text-white font-bold rounded-xl hover:bg-tropical-accent/90 transition-colors shadow-lg active:scale-[0.98] touch-manipulation text-sm sm:text-base">
+                                            {t('booking.email')}
+                                        </a>
+                                    )}
+                                    {!bookingUrl && !game.phone && !game.email && (
+                                        <span class="text-tropical-text/40 text-sm">{t('booking.no_contact')}</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </section>
+
+            {/* Reviews Section */}
+            <section class="mt-16 sm:mt-24 border-t border-tropical-secondary/10 pt-16">
+                <div class="flex items-center justify-between mb-8 sm:mb-12">
+                    <div>
+                        <h2 class="text-2xl sm:text-3xl font-black text-tropical-primary font-serif">{t('game.reviews')}</h2>
+                        <div class="flex items-center gap-2 mt-2">
+                            <span class="text-2xl font-bold text-tropical-text">{game.rating.toFixed(1)}</span>
+                            <div class="flex items-center text-yellow-500">
+                                <Star size={20} fill="currentColor" />
+                            </div>
+                            <span class="text-tropical-text/40">•</span>
+                            <span class="text-tropical-text/60 font-medium">{game.reviews_count} {t('game.reviews')}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {reviews && reviews.length > 0 ? (
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                        {reviews.map((rev: any) => (
+                            <div class="bg-white p-6 rounded-2xl border border-tropical-secondary/10 shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex items-center gap-4 mb-4">
+                                    <div class="w-12 h-12 rounded-full bg-tropical-card flex items-center justify-center overflow-hidden border border-tropical-secondary/20 font-bold text-tropical-primary">
+                                        {rev.avatar_url ? (
+                                            <img src={rev.avatar_url} alt={rev.player_name} class="w-full h-full object-cover" />
+                                        ) : (
+                                            rev.player_name?.charAt(0).toUpperCase() || 'P'
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-tropical-text">{rev.player_name || 'Anónimo'}</h4>
+                                        <div class="flex items-center text-yellow-500 gap-0.5">
+                                            {[...Array(5)].map((_, i) => (
+                                                <Star key={i} size={12} fill={i < rev.rating ? "currentColor" : "none"} className={i < rev.rating ? "text-yellow-500" : "text-gray-300"} />
+                                            ))}
+                                            <span class="text-[10px] text-tropical-text/40 ml-2">
+                                                {new Date(rev.created_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-tropical-text/80 text-sm leading-relaxed italic">
+                                    "{rev.comment}"
+                                </p>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div class="bg-tropical-card/30 rounded-2xl p-8 sm:p-12 text-center border border-dashed border-tropical-secondary/20">
+                        <div class="text-4xl mb-4 opacity-20">💬</div>
+                        <p class="text-tropical-text/40 font-medium">{t('game.no_reviews')}</p>
+                    </div>
+                )}
+            </section>
+
+        </main>
+
+        {galleryImages.length > 1 && (
+            <script is:inline>
+                const mainImage = document.getElementById('game-gallery-main');
+                const thumbButtons = Array.from(document.querySelectorAll('[data-gallery-thumb]'));
+
+                thumbButtons.forEach((button) => {
+                    button.addEventListener('click', () => {
+                        const image = button.getAttribute('data-image');
+                        if (!mainImage || !image) return;
+
+                        mainImage.setAttribute('src', image);
+
+                        thumbButtons.forEach((thumb) => {
+                            thumb.classList.remove('border-tropical-primary');
+                            thumb.classList.add('border-transparent');
+                        });
+
+                        button.classList.remove('border-transparent');
+                        button.classList.add('border-tropical-primary');
+                    });
+                });
+            </script>
+        )}
+	</body>
+</html>

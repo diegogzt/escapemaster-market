@@ -1,0 +1,9 @@
+{
+  "framework": "astro",
+  "rewrites": [
+    {
+      "source": "/api/((?!auth|payments|teams|rooms|routes|players|social|upload-photo|uploads).*)",
+      "destination": "https://api.escapemaster.es/$1"
+    }
+  ]
+}

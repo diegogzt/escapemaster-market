@@ -1,0 +1,177 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { Button } from '../../../components/ui/Button';
+
+const { lang } = Astro.params;
+
+const t = lang === 'en' ? {
+  title: 'Favorites',
+  subtitle: 'Escape rooms you\'ve saved for later',
+  empty: 'You haven\'t saved any favorites yet',
+  emptyDesc: 'Browse escape rooms and click the heart icon to save them here',
+  explore: 'Explore Rooms',
+  remove: 'Remove',
+  book: 'Book Now',
+  players: 'players',
+  min: 'min',
+  difficulty: 'Difficulty'
+} : {
+  title: 'Favoritos',
+  subtitle: 'Escape rooms que has guardado para después',
+  empty: 'Aún no has guardado favoritos',
+  emptyDesc: 'Explora escape rooms y haz clic en el corazón para guardarlos aquí',
+  explore: 'Explorar Salas',
+  remove: 'Quitar',
+  book: 'Reservar',
+  players: 'jugadores',
+  min: 'min',
+  difficulty: 'Dificultad'
+};
+---
+
+<Layout title={`${t.title} | EscapeMaster`}>
+  <main class="min-h-screen pt-20 sm:pt-32 pb-24 sm:pb-20 bg-tropical-bg">
+    <div class="max-container px-4">
+      <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="mb-6 sm:mb-8">
+          <a href={`/${lang}/profile`} class="text-tropical-secondary hover:underline flex items-center gap-1 text-sm mb-3 sm:mb-4 touch-manipulation">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            {lang === 'en' ? 'Back to Profile' : 'Volver al Perfil'}
+          </a>
+          <h1 class="text-2xl sm:text-3xl font-bold text-tropical-text">{t.title}</h1>
+          <p class="text-gray-500 mt-1 sm:mt-2 text-sm sm:text-base">{t.subtitle}</p>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingState" class="flex items-center justify-center py-40">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-tropical-text"></div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden">
+          <div class="bg-white rounded-2xl shadow-lg border border-tropical-card p-12 text-center">
+            <div class="w-20 h-20 bg-tropical-bg rounded-full mx-auto mb-6 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-tropical-secondary" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            </div>
+            <h3 class="text-xl font-semibold text-tropical-text mb-2">{t.empty}</h3>
+            <p class="text-gray-500 mb-6">{t.emptyDesc}</p>
+            <a href={`/${lang}/search`}>
+              <Button>{t.explore}</Button>
+            </a>
+          </div>
+        </div>
+
+        <!-- Favorites Grid -->
+        <div id="favoritesGrid" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Cards will be injected here -->
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script define:vars={{ lang, t }}>
+  import { auth } from '../../../lib/auth';
+
+  async function loadFavorites() {
+    const session = await auth.getSession();
+    
+    if (!session.user) {
+      window.location.href = `/${lang}/login`;
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('em_token');
+      const response = await fetch('/api/players/me/favorites', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) throw new Error('Error loading favorites');
+
+      const favorites = await response.json();
+
+      document.getElementById('loadingState')?.classList.add('hidden');
+
+      if (favorites.length === 0) {
+        document.getElementById('emptyState')?.classList.remove('hidden');
+        return;
+      }
+
+      const grid = document.getElementById('favoritesGrid');
+      if (!grid) return;
+
+      grid.classList.remove('hidden');
+      grid.innerHTML = favorites.map((fav: any) => `
+        <div class="bg-white rounded-2xl shadow-lg border border-tropical-card overflow-hidden group" data-room-id="${fav.room_id}">
+          <div class="relative h-48">
+            <img 
+              src="${fav.room.image_url || '/images/room-placeholder.jpg'}" 
+              alt="${fav.room.name}"
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+            <button class="remove-favorite absolute top-3 right-3 bg-white/90 p-2 rounded-full shadow hover:bg-red-50 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#ef4444" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            </button>
+            <div class="absolute bottom-3 left-3 flex gap-2">
+              <span class="bg-black/60 text-white text-xs px-2 py-1 rounded-full">${fav.room.min_players}-${fav.room.max_players} ${t.players}</span>
+              <span class="bg-black/60 text-white text-xs px-2 py-1 rounded-full">${fav.room.duration_minutes} ${t.min}</span>
+            </div>
+          </div>
+          <div class="p-4">
+            <h3 class="font-semibold text-tropical-text mb-1">${fav.room.name}</h3>
+            <p class="text-sm text-gray-500 mb-2">${fav.room.company_name || ''}</p>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1">
+                ${Array(5).fill(0).map((_, i) => `
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="${i < fav.room.difficulty ? '#F59E0B' : '#E5E7EB'}" stroke="${i < fav.room.difficulty ? '#F59E0B' : '#E5E7EB'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                `).join('')}
+              </div>
+              <span class="font-bold text-tropical-text">€${fav.room.price_per_person || fav.room.base_price}</span>
+            </div>
+            <div class="mt-4 flex gap-2">
+              <a href="/${lang}/game/${fav.room.id}" class="flex-1">
+                <button class="w-full py-2 px-4 bg-tropical-text text-white rounded-xl hover:bg-tropical-text/90 transition-colors text-sm font-medium">
+                  ${t.book}
+                </button>
+              </a>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // Add remove handlers
+      document.querySelectorAll('.remove-favorite').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const card = (e.target as HTMLElement).closest('[data-room-id]');
+          const roomId = card?.getAttribute('data-room-id');
+          if (!roomId) return;
+
+          try {
+            await fetch(`/api/players/me/favorites/${roomId}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            card?.remove();
+
+            // Check if empty
+            if (grid.children.length === 0) {
+              grid.classList.add('hidden');
+              document.getElementById('emptyState')?.classList.remove('hidden');
+            }
+          } catch (err) {
+            console.error('Error removing favorite:', err);
+          }
+        });
+      });
+
+    } catch (err) {
+      console.error('Error:', err);
+      document.getElementById('loadingState')?.classList.add('hidden');
+      document.getElementById('emptyState')?.classList.remove('hidden');
+    }
+  }
+
+  loadFavorites();
+</script>

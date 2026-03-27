@@ -1,0 +1,118 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { HelpCircle, MessageCircle, BookOpen, FileText } from 'lucide-react';
+
+const { lang = 'es' } = Astro.params;
+
+const helpLinks = {
+    es: [
+        {
+            title: 'Preguntas Frecuentes',
+            description: 'Respuestas a las preguntas más comunes sobre nuestro servicio',
+            icon: HelpCircle,
+            href: '/faq'
+        },
+        {
+            title: 'Contacto',
+            description: 'Ponte en contacto con nuestro equipo de soporte',
+            icon: MessageCircle,
+            href: '/contacto'
+        },
+        {
+            title: 'Cómo Funciona',
+            description: 'Aprende cómo usar la plataforma EscapeMaster',
+            icon: BookOpen,
+            href: '/'
+        },
+        {
+            title: 'Términos y Privacidad',
+            description: 'Lee nuestros términos de servicio y política de privacidad',
+            icon: FileText,
+            href: '/terminos'
+        }
+    ],
+    en: [
+        {
+            title: 'FAQ',
+            description: 'Answers to the most common questions about our service',
+            icon: HelpCircle,
+            href: '/faq'
+        },
+        {
+            title: 'Contact',
+            description: 'Get in touch with our support team',
+            icon: MessageCircle,
+            href: '/contacto'
+        },
+        {
+            title: 'How It Works',
+            description: 'Learn how to use the EscapeMaster platform',
+            icon: BookOpen,
+            href: '/'
+        },
+        {
+            title: 'Terms & Privacy',
+            description: 'Read our terms of service and privacy policy',
+            icon: FileText,
+            href: '/terminos'
+        }
+    ]
+};
+
+const content = helpLinks[lang as keyof typeof helpLinks] || helpLinks.es;
+
+const titles = {
+    es: 'Centro de Ayuda',
+    en: 'Help Center'
+};
+
+const title = titles[lang as keyof typeof titles] || titles.es;
+const subtitle = lang === 'en'
+    ? 'Everything you need to know about EscapeMaster'
+    : 'Todo lo que necesitas saber sobre EscapeMaster';
+---
+
+<Layout title={title}>
+    <div class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
+        <div class="mb-16 text-center">
+            <h1 class="text-5xl font-black text-tropical-primary tracking-tighter mb-4">{title}</h1>
+            <p class="text-tropical-text/60 text-lg">{subtitle}</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {content.map((item) => {
+                const Icon = item.icon;
+                const prefix = lang === 'en' ? '/en' : '/es';
+                return (
+                    <a
+                        href={`${prefix}${item.href}`}
+                        class="group p-8 rounded-2xl bg-white border border-tropical-secondary/10 hover:border-tropical-primary/30 hover:shadow-lg transition-all"
+                    >
+                        <div class="w-12 h-12 rounded-xl bg-tropical-primary/10 flex items-center justify-center mb-4 group-hover:bg-tropical-primary/20 transition-colors">
+                            <Icon className="w-6 h-6 text-tropical-primary" />
+                        </div>
+                        <h3 class="text-lg font-bold text-tropical-primary mb-2">{item.title}</h3>
+                        <p class="text-tropical-text/60 text-sm">{item.description}</p>
+                        <div class="mt-4 inline-flex items-center text-tropical-primary font-bold text-sm group-hover:gap-2 transition-all gap-1">
+                            Ver más
+                            <span>→</span>
+                        </div>
+                    </a>
+                );
+            })}
+        </div>
+
+        <div class="mt-16 p-8 rounded-2xl bg-gradient-to-r from-tropical-primary/5 to-tropical-secondary/5 border border-tropical-primary/20">
+            <h2 class="text-2xl font-bold text-tropical-primary mb-3">¿Necesitas ayuda adicional?</h2>
+            <p class="text-tropical-text/70 mb-6">
+                Si no encontraste lo que buscas, nuestro equipo de soporte está disponible para ayudarte.
+            </p>
+            <a
+                href={`/${lang}/contacto`}
+                class="inline-block px-8 py-3 bg-tropical-primary text-white font-bold rounded-xl hover:bg-tropical-primary/90 transition-colors"
+            >
+                Contactar Soporte
+            </a>
+        </div>
+    </div>
+</Layout>

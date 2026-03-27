@@ -1,0 +1,467 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { Button } from '../../../components/ui/Button';
+
+const { lang } = Astro.params;
+
+const t = lang === 'en' ? {
+  title: 'My History',
+  subtitle: "All the escape rooms you've played",
+  empty: "You haven't played any escape rooms yet",
+  emptyDesc: 'Once you complete your first escape, it will appear here',
+  explore: 'Find an Escape Room',
+  escaped: 'Escaped',
+  failed: 'Did not escape',
+  time: 'Time',
+  date: 'Date',
+  review: 'Write Review',
+  viewDetails: 'View Details',
+  upcoming: 'Upcoming Bookings',
+  upcomingEmpty: 'No upcoming bookings',
+  upcomingEmptyDesc: 'Your future reservations will appear here',
+  sell: 'Sell Ticket',
+  listed: 'Listed',
+  cancel: 'Cancel Listing',
+  price: 'Price',
+  sellSuccess: 'Ticket listed successfully!',
+  cancelSuccess: 'Listing cancelled!',
+  filters: {
+    all: 'All',
+    escaped: 'Escaped',
+    failed: 'Not Escaped'
+  },
+  stats: {
+    total: 'Total Games',
+    escaped: 'Escaped',
+    rate: 'Escape Rate',
+    avgTime: 'Avg. Time'
+  }
+} : {
+  title: 'Mi Historial',
+  subtitle: 'Todos los escape rooms que has jugado',
+  empty: 'Aún no has jugado ningún escape room',
+  emptyDesc: 'Cuando completes tu primer escape, aparecerá aquí',
+  explore: 'Buscar Escape Room',
+  escaped: 'Escapaste',
+  failed: 'No escapaste',
+  time: 'Tiempo',
+  date: 'Fecha',
+  review: 'Escribir Reseña',
+  viewDetails: 'Ver Detalles',
+  filters: {
+    all: 'Todos',
+    escaped: 'Escapados',
+    failed: 'No Escapados'
+  },
+  stats: {
+    total: 'Partidas',
+    escaped: 'Escapados',
+    rate: 'Tasa de Escape',
+    avgTime: 'Tiempo Medio'
+  },
+  upcoming: 'Próximas Reservas',
+  upcomingEmpty: 'Sin reservas próximas',
+  upcomingEmptyDesc: 'Tus reservas futuras aparecerán aquí',
+  sell: 'Vender Entrada',
+  listed: 'Publicado',
+  cancel: 'Cancelar',
+  price: 'Precio',
+  sellSuccess: '¡Entrada publicada con éxito!',
+  cancelSuccess: '¡Anuncio cancelado!',
+};
+---
+
+<Layout title={`${t.title} | EscapeMaster`}>
+  <main class="min-h-screen pt-20 sm:pt-32 pb-24 sm:pb-20 bg-tropical-bg">
+    <div class="max-container px-4">
+      <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="mb-6 sm:mb-8">
+          <a href={`/${lang}/profile`} class="text-tropical-secondary hover:underline flex items-center gap-1 text-sm mb-3 sm:mb-4 touch-manipulation">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            {lang === 'en' ? 'Back to Profile' : 'Volver al Perfil'}
+          </a>
+          <h1 class="text-2xl sm:text-3xl font-bold text-tropical-text">{t.title}</h1>
+          <p class="text-gray-500 mt-1 sm:mt-2 text-sm sm:text-base">{t.subtitle}</p>
+        </div>
+
+        <!-- Loading -->
+        <div id="loadingState" class="flex items-center justify-center py-40">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-tropical-text"></div>
+        </div>
+
+        <!-- Upcoming Bookings Section -->
+        <div id="upcomingSection" class="hidden mb-8">
+          <h2 class="text-xl font-bold text-tropical-text mb-4">{t.upcoming}</h2>
+          <div id="upcomingList" class="space-y-4">
+            <!-- Upcoming bookings will be injected here -->
+          </div>
+          <div id="upcomingEmpty" class="hidden">
+            <div class="bg-white rounded-2xl shadow border border-tropical-card p-8 text-center">
+              <p class="text-gray-500">{t.upcomingEmptyDesc}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Summary -->
+        <div id="statsSection" class="hidden mb-8">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white rounded-xl shadow border border-tropical-card p-4 text-center">
+              <p class="text-3xl font-bold text-tropical-text" id="statTotal">0</p>
+              <p class="text-sm text-gray-500">{t.stats.total}</p>
+            </div>
+            <div class="bg-white rounded-xl shadow border border-tropical-card p-4 text-center">
+              <p class="text-3xl font-bold text-green-600" id="statEscaped">0</p>
+              <p class="text-sm text-gray-500">{t.stats.escaped}</p>
+            </div>
+            <div class="bg-white rounded-xl shadow border border-tropical-card p-4 text-center">
+              <p class="text-3xl font-bold text-tropical-secondary" id="statRate">0%</p>
+              <p class="text-sm text-gray-500">{t.stats.rate}</p>
+            </div>
+            <div class="bg-white rounded-xl shadow border border-tropical-card p-4 text-center">
+              <p class="text-3xl font-bold text-amber-600" id="statAvgTime">--</p>
+              <p class="text-sm text-gray-500">{t.stats.avgTime}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div id="filtersSection" class="hidden mb-6">
+          <div class="flex gap-2">
+            <button data-filter="all" class="filter-btn active px-4 py-2 rounded-full text-sm font-medium bg-tropical-text text-white">
+              {t.filters.all}
+            </button>
+            <button data-filter="escaped" class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-600 border border-gray-200 hover:border-tropical-secondary">
+              {t.filters.escaped}
+            </button>
+            <button data-filter="failed" class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-white text-gray-600 border border-gray-200 hover:border-tropical-secondary">
+              {t.filters.failed}
+            </button>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden">
+          <div class="bg-white rounded-2xl shadow-lg border border-tropical-card p-12 text-center">
+            <div class="w-20 h-20 bg-tropical-bg rounded-full mx-auto mb-6 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="text-tropical-secondary" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <h3 class="text-xl font-semibold text-tropical-text mb-2">{t.empty}</h3>
+            <p class="text-gray-500 mb-6">{t.emptyDesc}</p>
+            <a href={`/${lang}/search`}>
+              <Button>{t.explore}</Button>
+            </a>
+          </div>
+        </div>
+
+        <!-- History List -->
+        <div id="historyList" class="hidden space-y-4">
+          <!-- Cards will be injected here -->
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script define:vars={{ lang, t }}>
+  import { auth } from '../../../lib/auth';
+
+  let allHistory: any[] = [];
+  let upcomingBookings: any[] = [];
+
+  async function loadHistory() {
+    const session = await auth.getSession();
+    
+    if (!session.user) {
+      window.location.href = `/${lang}/login`;
+      return;
+    }
+
+    const token = localStorage.getItem('em_token');
+
+    // Load both history and upcoming bookings in parallel
+    try {
+      const [historyRes, upcomingRes] = await Promise.all([
+        fetch('/api/players/me/history', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch('/api/players/me/upcoming', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
+
+      if (historyRes.ok) {
+        allHistory = await historyRes.json();
+      }
+
+      if (upcomingRes.ok) {
+        const upcomingData = await upcomingRes.json();
+        upcomingBookings = upcomingData.bookings || [];
+      }
+
+      document.getElementById('loadingState')?.classList.add('hidden');
+
+      // Show upcoming section
+      const upcomingSection = document.getElementById('upcomingSection');
+      const upcomingList = document.getElementById('upcomingList');
+      const upcomingEmpty = document.getElementById('upcomingEmpty');
+      
+      if (upcomingSection && upcomingList && upcomingEmpty) {
+        upcomingSection.classList.remove('hidden');
+        
+        if (upcomingBookings.length === 0) {
+          upcomingEmpty.classList.remove('hidden');
+        } else {
+          upcomingList.innerHTML = upcomingBookings.map((booking: any) => {
+            const date = new Date(booking.start_time).toLocaleDateString(lang === 'en' ? 'en-US' : 'es-ES', {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short'
+            });
+            const time = new Date(booking.start_time).toLocaleTimeString(lang === 'en' ? 'en-US' : 'es-ES', {
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            
+            const isListed = !!booking.listing_id;
+            
+            return `
+              <div class="bg-white rounded-2xl shadow border border-tropical-card overflow-hidden">
+                <div class="flex flex-col md:flex-row">
+                  <div class="md:w-48 h-32 md:h-auto">
+                    <img 
+                      src="${booking.room_image || '/images/room-placeholder.jpg'}" 
+                      alt="${booking.room_name}"
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div class="flex-1 p-4 md:p-6">
+                    <div class="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 class="font-semibold text-tropical-text text-lg">${booking.room_name}</h3>
+                        <p class="text-sm text-gray-500">${booking.organization_name}</p>
+                      </div>
+                      <span class="px-3 py-1 rounded-full text-sm font-medium bg-tropical-primary/10 text-tropical-primary">
+                        ${date}
+                      </span>
+                    </div>
+                    <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                      <span class="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        ${time}
+                      </span>
+                      <span class="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        ${booking.num_people} ${t.players}
+                      </span>
+                      <span class="font-medium text-tropical-text">${parseFloat(booking.total_price).toFixed(2)}€</span>
+                    </div>
+                    <div class="flex gap-2">
+                      <a href="/${lang}/game/${booking.room_id}">
+                        <button class="px-4 py-2 text-sm font-medium text-tropical-text bg-tropical-card rounded-lg hover:bg-tropical-card/80 transition-colors">
+                          ${t.viewDetails}
+                        </button>
+                      </a>
+                      ${isListed ? `
+                        <button 
+                          class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg"
+                          disabled
+                        >
+                          ${t.listed}
+                        </button>
+                      ` : `
+                        <button 
+                          data-booking-id="${booking.id}"
+                          data-original-price="${booking.total_price}"
+                          data-room-name="${booking.room_name}"
+                          class="sell-ticket-btn px-4 py-2 text-sm font-medium text-white bg-tropical-accent rounded-lg hover:bg-tropical-accent/90 transition-colors"
+                        >
+                          ${t.sell}
+                        </button>
+                      `}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          // Add event listeners for sell buttons
+          document.querySelectorAll('.sell-ticket-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+              const bookingId = (e.target as HTMLElement).getAttribute('data-booking-id');
+              const originalPrice = parseFloat((e.target as HTMLElement).getAttribute('data-original-price') || '0');
+              const roomName = (e.target as HTMLElement).getAttribute('data-room-name');
+              
+              // Show sell modal
+              const price = prompt(lang === 'en' ? `Enter selling price (max ${originalPrice.toFixed(2)}€):` : `Introduce el precio de venta (máx ${originalPrice.toFixed(2)}€):`, (originalPrice * 0.8).toFixed(2));
+              
+              if (!price) return;
+              
+              const priceNum = parseFloat(price);
+              if (isNaN(priceNum) || priceNum <= 0 || priceNum > originalPrice) {
+                alert(lang === 'en' ? 'Invalid price' : 'Precio inválido');
+                return;
+              }
+
+              try {
+                const response = await fetch('/api/marketplace', {
+                  method: 'POST',
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                  },
+                  body: JSON.stringify({
+                    booking_id: bookingId,
+                    price: priceNum,
+                    title: `${roomName} - ${lang === 'en' ? 'Ticket' : 'Entrada'}`
+                  })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                  alert(t.sellSuccess);
+                  window.location.reload();
+                } else {
+                  alert(data.error || (lang === 'en' ? 'Error listing ticket' : 'Error al publicar'));
+                }
+              } catch (err) {
+                console.error('Error:', err);
+                alert(lang === 'en' ? 'Error listing ticket' : 'Error al publicar');
+              }
+            });
+          });
+        }
+      }
+
+      if (allHistory.length === 0) {
+        document.getElementById('emptyState')?.classList.remove('hidden');
+        document.getElementById('statsSection')?.classList.add('hidden');
+        document.getElementById('filtersSection')?.classList.add('hidden');
+        return;
+      }
+
+      // Show sections
+      document.getElementById('statsSection')?.classList.remove('hidden');
+      document.getElementById('filtersSection')?.classList.remove('hidden');
+      document.getElementById('historyList')?.classList.remove('hidden');
+
+      // Calculate stats
+      const total = allHistory.length;
+      const escaped = allHistory.filter(h => h.escaped).length;
+      const rate = total > 0 ? Math.round((escaped / total) * 100) : 0;
+      const times = allHistory.filter(h => h.time_used).map(h => h.time_used);
+      const avgTime = times.length > 0 ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : null;
+
+      document.getElementById('statTotal')!.textContent = total.toString();
+      document.getElementById('statEscaped')!.textContent = escaped.toString();
+      document.getElementById('statRate')!.textContent = `${rate}%`;
+      document.getElementById('statAvgTime')!.textContent = avgTime ? `${avgTime}'` : '--';
+
+      // Render history
+      renderHistory(allHistory);
+
+      // Filter handlers
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const filter = (e.target as HTMLElement).getAttribute('data-filter');
+          
+          document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('active', 'bg-tropical-text', 'text-white');
+            b.classList.add('bg-white', 'text-gray-600', 'border', 'border-gray-200');
+          });
+          (e.target as HTMLElement).classList.add('active', 'bg-tropical-text', 'text-white');
+          (e.target as HTMLElement).classList.remove('bg-white', 'text-gray-600', 'border', 'border-gray-200');
+
+          let filtered = allHistory;
+          if (filter === 'escaped') filtered = allHistory.filter(h => h.escaped);
+          if (filter === 'failed') filtered = allHistory.filter(h => !h.escaped);
+          
+          renderHistory(filtered);
+        });
+      });
+
+    } catch (err) {
+      console.error('Error:', err);
+      document.getElementById('loadingState')?.classList.add('hidden');
+      document.getElementById('emptyState')?.classList.remove('hidden');
+    }
+  }
+
+  function renderHistory(history: any[]) {
+    const list = document.getElementById('historyList');
+    if (!list) return;
+
+    list.innerHTML = history.map((item: any) => {
+      const date = new Date(item.played_at).toLocaleDateString(lang === 'en' ? 'en-US' : 'es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      return `
+        <div class="bg-white rounded-2xl shadow-lg border border-tropical-card overflow-hidden">
+          <div class="flex flex-col md:flex-row">
+            <div class="md:w-48 h-32 md:h-auto">
+              <img 
+                src="${item.room.image_url || '/images/room-placeholder.jpg'}" 
+                alt="${item.room.name}"
+                class="w-full h-full object-cover"
+              />
+            </div>
+            <div class="flex-1 p-4 md:p-6">
+              <div class="flex items-start justify-between mb-2">
+                <div>
+                  <h3 class="font-semibold text-tropical-text text-lg">${item.room.name}</h3>
+                  <p class="text-sm text-gray-500">${item.room.company_name || ''}</p>
+                </div>
+                <span class="px-3 py-1 rounded-full text-sm font-medium ${
+                  item.escaped 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-red-100 text-red-700'
+                }">
+                  ${item.escaped ? t.escaped : t.failed}
+                </span>
+              </div>
+              <div class="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                <span class="flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                  ${date}
+                </span>
+                ${item.time_used ? `
+                  <span class="flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    ${item.time_used} min
+                  </span>
+                ` : ''}
+                ${item.hints_used !== undefined ? `
+                  <span class="flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                    ${item.hints_used} hints
+                  </span>
+                ` : ''}
+              </div>
+              <div class="flex gap-2">
+                <a href="/${lang}/game/${item.room.id}">
+                  <button class="px-4 py-2 text-sm font-medium text-tropical-text bg-tropical-card rounded-lg hover:bg-tropical-card/80 transition-colors">
+                    ${t.viewDetails}
+                  </button>
+                </a>
+                ${!item.has_review ? `
+                  <a href="/${lang}/review/${item.booking_id}">
+                    <button class="px-4 py-2 text-sm font-medium text-white bg-tropical-secondary rounded-lg hover:bg-tropical-secondary/90 transition-colors">
+                      ${t.review}
+                    </button>
+                  </a>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  loadHistory();
+</script>

@@ -1,0 +1,73 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { query } from '../../lib/db';
+import { ChevronDown } from 'lucide-react';
+
+const { lang = 'es' } = Astro.params;
+
+let faqContent = '';
+try {
+    const { rows } = await query('SELECT value FROM platform_settings WHERE key = $1', ['faq_content']);
+    faqContent = rows[0]?.value || '';
+} catch (_) {}
+
+// Parse FAQ format: Q on one line, A on following lines, separated by blank line
+const parseFAQ = (content: string) => {
+    const blocks = content.split('\n\n').filter(b => b.trim());
+    return blocks.map(block => {
+        const lines = block.trim().split('\n');
+        return {
+            q: lines[0],
+            a: lines.slice(1).join('\n')
+        };
+    }).filter(item => item.q && item.a);
+};
+
+const faqs = faqContent ? parseFAQ(faqContent) : [];
+
+const titles = {
+    es: 'Preguntas Frecuentes',
+    en: 'Frequently Asked Questions'
+};
+
+const title = titles[lang as keyof typeof titles] || titles.es;
+---
+
+<Layout title={title}>
+    <div class="max-w-3xl mx-auto px-6 py-16 lg:py-24">
+        <div class="mb-12 text-center">
+            <h1 class="text-5xl font-black text-tropical-primary tracking-tighter mb-4">{title}</h1>
+            <p class="text-tropical-text/60 text-lg">Respuestas a las preguntas más comunes</p>
+        </div>
+
+        <div class="space-y-4">
+            {faqs.length > 0 ? (
+                faqs.map((faq, i) => (
+                    <details class="group bg-white rounded-xl border border-tropical-secondary/10 p-6 hover:border-tropical-primary/20 transition-colors cursor-pointer">
+                        <summary class="flex items-center justify-between font-bold text-tropical-primary">
+                            <span>{faq.q}</span>
+                            <ChevronDown className="w-5 h-5 text-tropical-primary group-open:rotate-180 transition-transform" />
+                        </summary>
+                        <div class="mt-4 text-tropical-text/70 whitespace-pre-wrap leading-relaxed">
+                            {faq.a}
+                        </div>
+                    </details>
+                ))
+            ) : (
+                <div class="text-center py-12 text-tropical-text/40">
+                    <p class="text-lg font-semibold mb-2">Sin preguntas frecuentes</p>
+                    <p class="text-sm">La sección de FAQ está siendo actualizada.</p>
+                </div>
+            )}
+        </div>
+
+        <div class="mt-12 p-6 rounded-xl bg-tropical-primary/5 border border-tropical-primary/20 text-center">
+            <p class="text-sm text-tropical-text/60 mb-3">
+                ¿No encuentras lo que buscas?
+            </p>
+            <a href={`/${lang}/contacto`} class="inline-block px-6 py-2 bg-tropical-primary text-white font-bold rounded-xl hover:bg-tropical-primary/90 transition-colors text-sm">
+                Contacta con nosotros
+            </a>
+        </div>
+    </div>
+</Layout>

@@ -1,0 +1,20 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { UserDashboard } from '../components/react/UserDashboard';
+
+// This is a static page shell, the interactivity happens in the React Island
+---
+
+<Layout title="Mi Perfil | EscapeMaster">
+	<main class="min-h-screen bg-white pt-8 pb-20">
+		<div class="max-w-7xl mx-auto px-6">
+            <header class="mb-8">
+                <h1 class="text-3xl md:text-4xl font-serif font-black text-tropical-primary mb-2">Panel de Usuario</h1>
+                <p class="text-tropical-text/60">Bienvenido de nuevo, explorador.</p>
+            </header>
+            
+            <!-- Mount the dashboard as a client-side only app/island -->
+            <UserDashboard client:only="react" />
+		</div>
+	</main>
+</Layout>

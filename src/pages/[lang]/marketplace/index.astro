@@ -1,0 +1,322 @@
+---
+export const prerender = false;
+import { query } from '../../../lib/db';
+import '../../../styles/global.css';
+import { ui } from '../../../i18n/ui';
+import Layout from '../../../layouts/Layout.astro';
+
+const { lang } = Astro.params;
+const t = (key: keyof typeof ui['es']) => ui[lang as keyof typeof ui]?.[key] || key;
+
+const searchParams = Astro.url.searchParams;
+const q = searchParams.get('q') || '';
+const city = searchParams.get('city');
+
+let listings: any[] = [];
+let errorMessage = '';
+let tableExists = false;
+
+try {
+  // Check if table exists first
+  const tableCheck = await query(`
+    SELECT EXISTS (
+      SELECT FROM information_schema.tables 
+      WHERE table_name = 'marketplace_listings'
+    )
+  `);
+  
+  tableExists = tableCheck.rows[0]?.exists || false;
+  
+  if (tableExists) {
+    let sql = `
+      SELECT 
+        ml.id,
+        ml.price,
+        ml.original_price,
+        ml.commission_rate,
+        ml.title,
+        ml.description,
+        ml.created_at,
+        ml.expires_at,
+        r.name as room_name,
+        r.image_url as room_image,
+        r.city as room_city,
+        r.duration_minutes,
+        b.start_time,
+        b.end_time,
+        b.num_people,
+        b.status as booking_status
+      FROM marketplace_listings ml
+      JOIN bookings b ON b.id = ml.booking_id
+      JOIN rooms r ON r.id = b.room_id
+      WHERE ml.status = 'available' AND ml.expires_at > NOW()
+    `;
+    
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (q) {
+      sql += ` AND (r.name ILIKE $${paramIndex} OR r.city ILIKE $${paramIndex})`;
+      params.push(`%${q}%`);
+      paramIndex++;
+    }
+
+    if (city) {
+      sql += ` AND r.city = $${paramIndex}`;
+      params.push(city);
+      paramIndex++;
+    }
+
+    sql += ` ORDER BY ml.created_at DESC LIMIT 50`;
+
+    const result = await query(sql, params);
+    listings = result.rows;
+  }
+} catch (error) {
+  console.error('Error fetching listings:', error);
+  errorMessage = 'Error loading marketplace';
+}
+
+// Get unique cities for filter
+let cities: string[] = [];
+if (tableExists) {
+  try {
+    const citiesResult = await query(`
+      SELECT DISTINCT r.city 
+      FROM marketplace_listings ml
+      JOIN bookings b ON b.id = ml.booking_id
+      JOIN rooms r ON r.id = b.room_id
+      WHERE ml.status = 'available' AND ml.expires_at > NOW()
+      ORDER BY r.city
+    `);
+    cities = citiesResult.rows.map((r: any) => r.city);
+  } catch (e) {
+    console.error('Error fetching cities:', e);
+  }
+}
+---
+
+<Layout title={lang === 'en' ? 'Ticket Marketplace' : 'Mercadillo de Entradas'}>
+  <main class="min-h-screen bg-tropical-bg">
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-b from-tropical-primary to-tropical-secondary py-12 sm:py-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="text-center">
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+            {lang === 'en' ? 'Ticket Marketplace' : 'Mercadillo de Entradas'}
+          </h1>
+          <p class="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto">
+            {lang === 'en' 
+              ? 'Buy and sell escape room tickets. Couldnt make it? Sell your ticket!'
+              : 'Compra y vende entradas de escape room. ¿No pudiste ir? ¡Vende tu entrada!'
+            }
+          </p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mt-8 max-w-2xl mx-auto">
+          <form method="GET" action={`/${lang}/marketplace`} class="flex gap-2">
+            <input 
+              type="text" 
+              name="q" 
+              value={q}
+              placeholder={lang === 'en' ? 'Search rooms or cities...' : 'Buscar salas o ciudades...'}
+              class="flex-1 px-4 py-3 rounded-xl bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
+            />
+            <button 
+              type="submit"
+              class="px-6 py-3 bg-tropical-accent text-white font-bold rounded-xl hover:bg-tropical-accent/90 active:scale-95 transition-transform"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+              </svg>
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="py-4 border-b border-gray-200 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="flex flex-wrap gap-2 items-center">
+          <span class="text-sm font-medium text-gray-600">
+            {lang === 'en' ? 'Filter by city:' : 'Filtrar por ciudad:'}
+          </span>
+          <a 
+            href={`/${lang}/marketplace${q ? `?q=${q}` : '?'}`}
+            class={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              !city 
+                ? 'bg-tropical-primary text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {lang === 'en' ? 'All' : 'Todas'}
+          </a>
+          {cities.map((c: string) => (
+            <a 
+              href={`/${lang}/marketplace?city=${c}${q ? `&q=${q}` : ''}`}
+              class={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                city === c 
+                  ? 'bg-tropical-primary text-white' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {c}
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Listings Grid -->
+    <section class="py-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        {errorMessage && (
+          <div class="bg-red-50 text-red-600 p-4 rounded-xl mb-6">
+            {errorMessage}
+          </div>
+        )}
+
+        {listings.length === 0 ? (
+          <div class="text-center py-16">
+            {!tableExists ? (
+              <>
+                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-gray-400">
+                    <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+                  </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">
+                  {lang === 'en' ? 'Coming Soon' : 'Próximamente'}
+                </h3>
+                <p class="text-gray-600">
+                  {lang === 'en' 
+                    ? 'The marketplace is being set up. Check back soon!' 
+                    : 'El mercadillo se está configurando. ¡Vuelve pronto!'
+                  }
+                </p>
+              </>
+            ) : (
+              <>
+                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-gray-400">
+                    <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+                  </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">
+                  {lang === 'en' ? 'No tickets available' : 'No hay entradas disponibles'}
+                </h3>
+                <p class="text-gray-600">
+                  {lang === 'en' 
+                    ? 'Be the first to list a ticket for sale!' 
+                    : '¡Sé el primero en publicar una entrada!'
+                  }
+                </p>
+                <a 
+                  href={`/${lang}/profile/history`}
+                  class="inline-block mt-4 px-5 py-2.5 bg-tropical-primary text-white font-bold rounded-xl hover:bg-tropical-primary/90"
+                >
+                  {lang === 'en' ? 'Sell a ticket' : 'Vender una entrada'}
+                </a>
+              </>
+            )}
+          </div>
+        ) : (
+          <>
+            <p class="text-gray-600 mb-6">
+              {lang === 'en' 
+                ? `${listings.length} tickets available`
+                : `${listings.length} entradas disponibles`
+              }
+            </p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              {listings.map((listing: any) => (
+                <a 
+                  href={`/${lang}/marketplace/${listing.id}`}
+                  class="group block bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300"
+                >
+                  <!-- Image -->
+                  <div class="relative aspect-[4/3] overflow-hidden bg-gray-100">
+                    {listing.room_image ? (
+                      <img 
+                        src={listing.room_image} 
+                        alt={listing.room_name}
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-tropical-primary/20 to-tropical-secondary/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="text-tropical-primary/40">
+                          <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+                        </svg>
+                      </div>
+                    )}
+                    
+                    <!-- Price Badge -->
+                    <div class="absolute top-3 right-3 bg-tropical-accent text-white px-3 py-1.5 rounded-full font-bold text-sm shadow-lg">
+                      {listing.price.toFixed(2)}€
+                    </div>
+
+                    <!-- Discount Badge -->
+                    {listing.price < listing.original_price && (
+                      <div class="absolute top-3 left-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
+                        -{((1 - listing.price / listing.original_price) * 100).toFixed(0)}%
+                      </div>
+                    )}
+                  </div>
+
+                  <!-- Content -->
+                  <div class="p-4">
+                    <h3 class="font-bold text-gray-900 mb-1 line-clamp-1 group-hover:text-tropical-primary transition-colors">
+                      {listing.room_name}
+                    </h3>
+                    
+                    <div class="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+                      </svg>
+                      {listing.room_city}
+                    </div>
+
+                    <!-- Booking Details -->
+                    <div class="flex flex-wrap gap-2 mb-3">
+                      <div class="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded-lg text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>
+                        </svg>
+                        {new Date(listing.start_time).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                      </div>
+                      <div class="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded-lg text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        {new Date(listing.start_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                      <div class="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded-lg text-gray-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        {listing.num_people} {lang === 'en' ? 'players' : 'jugadores'}
+                      </div>
+                    </div>
+
+                    <!-- Seller Info -->
+                    <div class="pt-3 border-t border-gray-100 flex items-center justify-between">
+                      <span class="text-xs text-gray-500">
+                        {lang === 'en' ? 'Expires:' : 'Expira:'} {new Date(listing.expires_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                      </span>
+                      <span class="text-xs font-medium text-tropical-primary">
+                        {lang === 'en' ? 'View details' : 'Ver detalles'}
+                      </span>
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </section>
+  </main>
+</Layout>

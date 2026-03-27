@@ -1,0 +1,203 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { pool } from '../../../lib/db';
+import { ui } from '../../../i18n/ui';
+
+const { lang = 'es' } = Astro.params;
+const t = ui[lang as keyof typeof ui] || ui.es;
+
+let offers: any[] = [];
+
+try {
+  const result = await pool.query(`
+    SELECT of.*, r.name as room_name, r.image_url as room_image, r.city as room_city,
+           r.duration_minutes, r.capacity_min, r.capacity, r.difficulty_level,
+           r.average_rating, r.total_reviews, r.price_per_person,
+           o.name as org_name
+    FROM offers of
+    JOIN rooms r ON r.id = of.room_id
+    LEFT JOIN organizations o ON o.id = r.organization_id
+    WHERE of.is_active = true 
+      AND r.is_active = true
+      AND (of.valid_until IS NULL OR of.valid_until >= NOW())
+      AND (of.max_uses IS NULL OR of.current_uses < of.max_uses)
+    ORDER BY of.offer_type, of.discount_percentage DESC NULLS LAST
+  `);
+  offers = result.rows;
+} catch (e) {
+  console.error('Error loading offers:', e);
+}
+
+function getOfferBadge(type: string) {
+  switch(type) {
+    case 'discount': return { text: 'Descuento', color: 'bg-red-500', icon: '🏷️' };
+    case '2x1': return { text: '2x1', color: 'bg-purple-600', icon: '🎉' };
+    case 'happy_hour': return { text: 'Happy Hour', color: 'bg-orange-500', icon: '⏰' };
+    case 'last_minute': return { text: 'Última Hora', color: 'bg-yellow-500', icon: '⚡' };
+    default: return { text: 'Oferta', color: 'bg-tropical-primary', icon: '🎁' };
+  }
+}
+
+function formatDate(date: string) {
+  return new Date(date).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+---
+
+<Layout title={`${t['offers.title']} | EscapeMaster`}>
+  <main class="pt-24 pb-32 sm:pb-16 max-w-6xl mx-auto px-4 sm:px-6">
+    <!-- Header -->
+    <div class="text-center mb-10">
+      <h1 class="text-3xl sm:text-4xl font-black text-tropical-text">{t['offers.title']}</h1>
+      <p class="text-tropical-text/50 mt-2 max-w-xl mx-auto">{t['offers.subtitle']}</p>
+    </div>
+
+    <!-- Offer Type Filters -->
+    <div class="flex flex-wrap justify-center gap-3 mb-8">
+      <button data-filter="all" class="filter-btn active bg-tropical-primary text-white px-4 py-2 rounded-full text-sm font-bold transition-all">
+        Todas
+      </button>
+      <button data-filter="discount" class="filter-btn bg-gray-100 text-tropical-text/70 px-4 py-2 rounded-full text-sm font-bold hover:bg-red-50 hover:text-red-600 transition-all">
+        🏷️ Descuentos
+      </button>
+      <button data-filter="2x1" class="filter-btn bg-gray-100 text-tropical-text/70 px-4 py-2 rounded-full text-sm font-bold hover:bg-purple-50 hover:text-purple-600 transition-all">
+        🎉 2x1
+      </button>
+      <button data-filter="happy_hour" class="filter-btn bg-gray-100 text-tropical-text/70 px-4 py-2 rounded-full text-sm font-bold hover:bg-orange-50 hover:text-orange-600 transition-all">
+        ⏰ Happy Hour
+      </button>
+      <button data-filter="last_minute" class="filter-btn bg-gray-100 text-tropical-text/70 px-4 py-2 rounded-full text-sm font-bold hover:bg-yellow-50 hover:text-yellow-600 transition-all">
+        ⚡ Última Hora
+      </button>
+    </div>
+
+    <!-- Offers Grid -->
+    {offers.length > 0 ? (
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="offers-grid">
+        {offers.map((offer: any) => {
+          const badge = getOfferBadge(offer.offer_type);
+          return (
+            <div class="offer-card group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:border-tropical-primary/20 transition-all duration-300" data-type={offer.offer_type}>
+              <div class="relative aspect-[16/10] overflow-hidden">
+                <img 
+                  src={offer.room_image || 'https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=400'} 
+                  alt={offer.room_name}
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                />
+                <div class="absolute top-3 left-3 flex gap-2">
+                  <span class={`${badge.color} text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg`}>
+                    {badge.icon} {badge.text}
+                  </span>
+                </div>
+                {offer.discount_percentage && (
+                  <div class="absolute top-3 right-3 bg-red-600 text-white text-lg font-black px-3 py-1 rounded-xl shadow-lg rotate-3">
+                    -{offer.discount_percentage}%
+                  </div>
+                )}
+              </div>
+              <div class="p-5">
+                <h3 class="font-bold text-lg text-tropical-text">{offer.title}</h3>
+                <p class="text-tropical-text/50 text-sm mt-1">{offer.description || ''}</p>
+                
+                <a href={`/${lang}/game/${offer.room_id}`} class="block mt-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                  <p class="text-[10px] font-bold text-tropical-primary uppercase tracking-wider">{offer.org_name}</p>
+                  <p class="font-semibold text-sm text-tropical-text">{offer.room_name}</p>
+                  <div class="flex items-center gap-2 text-[11px] text-tropical-text/40 mt-1">
+                    <span>{offer.room_city}</span>
+                    <span>·</span>
+                    <span>{offer.duration_minutes} min</span>
+                    {offer.average_rating && (
+                      <>
+                        <span>·</span>
+                        <span>⭐ {offer.average_rating}</span>
+                      </>
+                    )}
+                  </div>
+                </a>
+
+                <!-- Pricing -->
+                <div class="flex items-end justify-between mt-4">
+                  <div>
+                    {offer.original_price && (
+                      <span class="text-sm text-tropical-text/30 line-through mr-2">{offer.original_price}€</span>
+                    )}
+                    {offer.offer_price && (
+                      <span class="text-xl font-black text-tropical-primary">{offer.offer_price}€</span>
+                    )}
+                    {!offer.offer_price && offer.discount_percentage && (
+                      <span class="text-xl font-black text-tropical-primary">-{offer.discount_percentage}%</span>
+                    )}
+                  </div>
+                  <a href={`/${lang}/game/${offer.room_id}`} class="bg-tropical-primary text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:bg-tropical-primary/90 transition-colors shadow-md">
+                    {t['offers.book_now']}
+                  </a>
+                </div>
+
+                <!-- Footer Info -->
+                <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-100 text-[11px] text-tropical-text/40">
+                  <div class="flex items-center gap-3">
+                    {offer.valid_until && (
+                      <span>
+                        {t['offers.valid_until']}: {formatDate(offer.valid_until)}
+                      </span>
+                    )}
+                    {offer.coupon_code && (
+                      <span class="bg-gray-100 px-2 py-0.5 rounded font-mono font-bold text-tropical-text/60">
+                        {offer.coupon_code}
+                      </span>
+                    )}
+                  </div>
+                  {offer.conditions && (
+                    <button class="text-tropical-primary underline hover:no-underline conditions-btn" data-conditions={offer.conditions}>
+                      {t['offers.conditions']}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    ) : (
+      <div class="text-center py-16">
+        <div class="text-6xl mb-4">🎁</div>
+        <p class="text-tropical-text/50 text-lg">No hay ofertas disponibles en este momento</p>
+        <a href={`/${lang}/search`} class="inline-block mt-4 bg-tropical-primary text-white font-bold px-6 py-3 rounded-xl hover:bg-tropical-primary/90 transition-colors">
+          Explorar salas
+        </a>
+      </div>
+    )}
+  </main>
+
+  <script>
+    // Filter offers
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          b.classList.remove('active', 'bg-tropical-primary', 'text-white');
+          b.classList.add('bg-gray-100', 'text-tropical-text/70');
+        });
+        btn.classList.add('active', 'bg-tropical-primary', 'text-white');
+        btn.classList.remove('bg-gray-100', 'text-tropical-text/70');
+
+        const filter = (btn as HTMLElement).dataset.filter;
+        document.querySelectorAll('.offer-card').forEach(card => {
+          const el = card as HTMLElement;
+          if (filter === 'all' || el.dataset.type === filter) {
+            el.style.display = '';
+          } else {
+            el.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // Conditions tooltip
+    document.querySelectorAll('.conditions-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const conditions = (btn as HTMLElement).dataset.conditions;
+        if (conditions) alert(conditions);
+      });
+    });
+  </script>
+</Layout>
