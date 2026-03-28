@@ -1,4 +1,5 @@
 const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000';
+const CMS_API_URL = import.meta.env.PUBLIC_CMS_API_URL || 'http://localhost:4322';
 
 class ApiError extends Error {
   status: number;
@@ -35,6 +36,24 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   // Some endpoints might return 204 No Content
   if (response.status === 204) {
       return {} as T;
+  }
+
+  return response.json();
+}
+
+async function cmsRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+
+  const response = await fetch(`${CMS_API_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new ApiError(response.statusText, response.status);
   }
 
   return response.json();
@@ -107,5 +126,9 @@ export const api = {
             method: 'POST',
             body: JSON.stringify(data)
         }),
+    },
+    cms: {
+        getPage: (slug: string) => cmsRequest<any>(`/api/cms/public/pages/${slug}`),
+        listPages: () => cmsRequest<any>('/api/cms/public/pages'),
     }
 };
