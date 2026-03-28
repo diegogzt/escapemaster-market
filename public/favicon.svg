@@ -1,15 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <defs>
-    <style>
-      .logo-bg { fill: #0097b2; }
-      .logo-text { fill: #ffffff; font-family: system-ui, -apple-system, sans-serif; font-size: 90px; font-weight: 900; text-anchor: middle; dominant-baseline: middle; }
-      @media (prefers-color-scheme: dark) {
-        .logo-bg { fill: #00c4e0; }
-      }
-    </style>
-  </defs>
-  <!-- Rounded square background -->
-  <rect x="8" y="8" width="112" height="112" rx="16" ry="16" class="logo-bg"/>
-  <!-- Letter M -->
-  <text x="64" y="72" class="logo-text">M</text>
+  <rect x="8" y="8" width="112" height="112" rx="24" ry="24" fill="#0097b2"/>
+  <path d="M 38 98 L 38 50 C 38 30, 64 30, 64 50 L 64 98 M 64 50 C 64 30, 90 30, 90 50 L 90 98"
+    fill="none" stroke="white" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
