@@ -73,46 +73,65 @@ const subtitle = lang === 'en'
 ---
 
 <Layout title={title}>
-    <div class="max-w-5xl mx-auto px-6 py-16 lg:py-24">
-        <div class="mb-16 text-center">
-            <h1 class="text-5xl font-black text-tropical-primary tracking-tighter mb-4">{title}</h1>
-            <p class="text-tropical-text/60 text-lg">{subtitle}</p>
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-24">
+        <!-- Header Section -->
+        <div class="mb-10 sm:mb-16 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-tropical-primary/10 mb-6">
+                <HelpCircle className="w-8 h-8 sm:w-10 sm:h-10 text-tropical-primary" />
+            </div>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-tropical-primary tracking-tight mb-3 sm:mb-4">{title}</h1>
+            <p class="text-tropical-text/60 text-base sm:text-lg max-w-xl mx-auto">{subtitle}</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {content.map((item) => {
+        <!-- Help Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-10 sm:mb-16">
+            {content.map((item, index) => {
                 const Icon = item.icon;
                 const prefix = lang === 'en' ? '/en' : '/es';
                 return (
                     <a
                         href={`${prefix}${item.href}`}
-                        class="group p-8 rounded-2xl bg-white border border-tropical-secondary/10 hover:border-tropical-primary/30 hover:shadow-lg transition-all"
+                        class="group p-5 sm:p-6 lg:p-8 rounded-2xl bg-white border border-tropical-secondary/10 hover:border-tropical-primary/30 hover:shadow-lg transition-all duration-300"
+                        style={`transition-delay: ${index * 50}ms`}
                     >
-                        <div class="w-12 h-12 rounded-xl bg-tropical-primary/10 flex items-center justify-center mb-4 group-hover:bg-tropical-primary/20 transition-colors">
-                            <Icon className="w-6 h-6 text-tropical-primary" />
+                        <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-tropical-primary/10 flex items-center justify-center mb-4 group-hover:bg-tropical-primary/20 group-hover:scale-110 transition-all duration-300">
+                            <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-tropical-primary" />
                         </div>
-                        <h3 class="text-lg font-bold text-tropical-primary mb-2">{item.title}</h3>
-                        <p class="text-tropical-text/60 text-sm">{item.description}</p>
-                        <div class="mt-4 inline-flex items-center text-tropical-primary font-bold text-sm group-hover:gap-2 transition-all gap-1">
-                            Ver más
-                            <span>→</span>
+                        <h3 class="text-base sm:text-lg font-bold text-tropical-primary mb-2 group-hover:translate-x-1 transition-transform">{item.title}</h3>
+                        <p class="text-tropical-text/60 text-sm mb-4">{item.description}</p>
+                        <div class="inline-flex items-center text-tropical-primary font-bold text-sm group-hover:gap-2 transition-all gap-1">
+                            {lang === 'en' ? 'Learn more' : 'Ver más'}
+                            <span class="group-hover:translate-x-1 transition-transform">→</span>
                         </div>
                     </a>
                 );
             })}
         </div>
 
-        <div class="mt-16 p-8 rounded-2xl bg-gradient-to-r from-tropical-primary/5 to-tropical-secondary/5 border border-tropical-primary/20">
-            <h2 class="text-2xl font-bold text-tropical-primary mb-3">¿Necesitas ayuda adicional?</h2>
-            <p class="text-tropical-text/70 mb-6">
-                Si no encontraste lo que buscas, nuestro equipo de soporte está disponible para ayudarte.
-            </p>
-            <a
-                href={`/${lang}/contacto`}
-                class="inline-block px-8 py-3 bg-tropical-primary text-white font-bold rounded-xl hover:bg-tropical-primary/90 transition-colors"
-            >
-                Contactar Soporte
-            </a>
+        <!-- Support CTA Section -->
+        <div class="p-6 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl bg-gradient-to-r from-tropical-primary/5 to-tropical-secondary/5 border border-tropical-primary/20">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-tropical-primary/10 flex items-center justify-center shrink-0">
+                    <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 text-tropical-primary" />
+                </div>
+                <div class="flex-1 text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-tropical-primary mb-2">
+                        {lang === 'en' ? 'Need additional help?' : '¿Necesitas ayuda adicional?'}
+                    </h2>
+                    <p class="text-tropical-text/70 text-sm sm:text-base">
+                        {lang === 'en' 
+                            ? "If you couldn't find what you're looking for, our support team is available to help you." 
+                            : 'Si no encontraste lo que buscas, nuestro equipo de soporte está disponible para ayudarte.'
+                        }
+                    </p>
+                </div>
+                <a
+                    href={`/${lang}/contacto`}
+                    class="inline-flex items-center justify-center h-11 sm:h-12 px-6 sm:px-8 bg-tropical-primary text-white font-bold rounded-xl hover:bg-tropical-primary/90 active:scale-[0.98] transition-all shadow-lg shadow-tropical-primary/20 touch-manipulation whitespace-nowrap"
+                >
+                    {lang === 'en' ? 'Contact Support' : 'Contactar Soporte'}
+                </a>
+            </div>
         </div>
     </div>
 </Layout>

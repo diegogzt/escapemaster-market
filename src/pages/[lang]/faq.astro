@@ -34,39 +34,57 @@ const title = titles[lang as keyof typeof titles] || titles.es;
 ---
 
 <Layout title={title}>
-    <div class="max-w-3xl mx-auto px-6 py-16 lg:py-24">
-        <div class="mb-12 text-center">
-            <h1 class="text-5xl font-black text-tropical-primary tracking-tighter mb-4">{title}</h1>
-            <p class="text-tropical-text/60 text-lg">Respuestas a las preguntas más comunes</p>
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-24">
+        <!-- Header Section -->
+        <div class="mb-10 sm:mb-12 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-tropical-primary/10 mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 sm:w-10 sm:h-10 text-tropical-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+            </div>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-tropical-primary tracking-tight mb-3 sm:mb-4">{title}</h1>
+            <p class="text-tropical-text/60 text-base sm:text-lg">
+                {lang === 'en' ? 'Answers to the most common questions' : 'Respuestas a las preguntas más comunes'}
+            </p>
         </div>
 
-        <div class="space-y-4">
+        <!-- FAQ Items -->
+        <div class="space-y-3 sm:space-y-4 mb-10 sm:mb-12">
             {faqs.length > 0 ? (
                 faqs.map((faq, i) => (
-                    <details class="group bg-white rounded-xl border border-tropical-secondary/10 p-6 hover:border-tropical-primary/20 transition-colors cursor-pointer">
-                        <summary class="flex items-center justify-between font-bold text-tropical-primary">
-                            <span>{faq.q}</span>
-                            <ChevronDown className="w-5 h-5 text-tropical-primary group-open:rotate-180 transition-transform" />
+                    <details class="group bg-white rounded-xl sm:rounded-2xl border border-tropical-secondary/10 p-4 sm:p-6 hover:border-tropical-primary/20 transition-colors cursor-pointer">
+                        <summary class="flex items-center justify-between gap-4 font-bold text-tropical-primary text-sm sm:text-base">
+                            <span class="text-left flex-1">{faq.q}</span>
+                            <ChevronDown className="w-5 h-5 text-tropical-primary group-open:rotate-180 transition-transform shrink-0" />
                         </summary>
-                        <div class="mt-4 text-tropical-text/70 whitespace-pre-wrap leading-relaxed">
+                        <div class="mt-4 pt-4 border-t border-gray-100 text-tropical-text/70 whitespace-pre-wrap leading-relaxed text-sm sm:text-base">
                             {faq.a}
                         </div>
                     </details>
                 ))
             ) : (
-                <div class="text-center py-12 text-tropical-text/40">
-                    <p class="text-lg font-semibold mb-2">Sin preguntas frecuentes</p>
-                    <p class="text-sm">La sección de FAQ está siendo actualizada.</p>
+                <div class="text-center py-12 sm:py-16 text-tropical-text/40">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 bg-tropical-bg rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 sm:w-10 sm:h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+                    </div>
+                    <p class="text-base sm:text-lg font-semibold mb-2">
+                        {lang === 'en' ? 'No frequently asked questions' : 'Sin preguntas frecuentes'}
+                    </p>
+                    <p class="text-sm">
+                        {lang === 'en' ? 'The FAQ section is being updated.' : 'La sección de FAQ está siendo actualizada.'}
+                    </p>
                 </div>
             )}
         </div>
 
-        <div class="mt-12 p-6 rounded-xl bg-tropical-primary/5 border border-tropical-primary/20 text-center">
-            <p class="text-sm text-tropical-text/60 mb-3">
-                ¿No encuentras lo que buscas?
+        <!-- Contact CTA -->
+        <div class="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-tropical-primary/5 to-tropical-secondary/5 border border-tropical-primary/20 text-center">
+            <p class="text-tropical-text/60 text-sm mb-4">
+                {lang === 'en' ? "Can't find what you're looking for?" : '¿No encuentras lo que buscas?'}
             </p>
-            <a href={`/${lang}/contacto`} class="inline-block px-6 py-2 bg-tropical-primary text-white font-bold rounded-xl hover:bg-tropical-primary/90 transition-colors text-sm">
-                Contacta con nosotros
+            <a 
+                href={`/${lang}/contacto`} 
+                class="inline-flex items-center justify-center h-11 sm:h-12 px-6 sm:px-8 bg-tropical-primary text-white font-bold rounded-xl hover:bg-tropical-primary/90 active:scale-[0.98] transition-all shadow-lg shadow-tropical-primary/20 touch-manipulation"
+            >
+                {lang === 'en' ? 'Contact Us' : 'Contacta con nosotros'}
             </a>
         </div>
     </div>

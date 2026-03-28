@@ -19,31 +19,58 @@ const title = titles[lang as keyof typeof titles] || titles.es;
 ---
 
 <Layout title={title}>
-    <div class="max-w-4xl mx-auto px-6 py-16 lg:py-24">
-        <div class="mb-12">
-            <h1 class="text-5xl font-black text-tropical-primary tracking-tighter mb-4">{title}</h1>
-            <p class="text-tropical-text/60 text-lg">Última actualización: {new Date().toLocaleDateString(lang)}</p>
-        </div>
-
-        <div class="prose prose-sm max-w-none">
-            <div class="bg-white rounded-2xl p-8 shadow-sm border border-tropical-secondary/10">
-                {content ? (
-                    <div class="whitespace-pre-wrap text-tropical-text/80 leading-relaxed">
-                        {content}
-                    </div>
-                ) : (
-                    <div class="text-center py-12 text-tropical-text/40">
-                        <p class="text-lg font-semibold mb-2">Contenido no disponible</p>
-                        <p class="text-sm">Los términos y condiciones están siendo actualizados.</p>
-                    </div>
-                )}
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-24">
+        <!-- Header Section -->
+        <div class="mb-10 sm:mb-16">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-tropical-primary/10 text-tropical-primary text-xs font-bold uppercase tracking-widest mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Legal
             </div>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-tropical-primary tracking-tight mb-3 sm:mb-4">{title}</h1>
+            <p class="text-tropical-text/50 text-sm sm:text-base flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                {lang === 'en' ? 'Last updated:' : 'Última actualización:'} {new Date().toLocaleDateString(lang)}
+            </p>
         </div>
 
-        <div class="mt-12 p-6 rounded-xl bg-tropical-primary/5 border border-tropical-primary/20">
-            <p class="text-sm text-tropical-text/60">
-                Si tienes preguntas sobre nuestros términos, <a href={`/${lang}/contacto`} class="text-tropical-primary font-bold hover:underline">contacta con nosotros</a>.
-            </p>
+        <!-- Content Section -->
+        <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 shadow-sm border border-tropical-secondary/10 mb-8 sm:mb-12">
+            {content ? (
+                <article class="prose prose-sm max-w-none">
+                    <div class="whitespace-pre-wrap text-tropical-text/80 leading-relaxed text-sm sm:text-base space-y-4">
+                        {content.split('\n\n').map((paragraph: string) => (
+                            <p class="text-tropical-text/80">{paragraph}</p>
+                        ))}
+                    </div>
+                </article>
+            ) : (
+                <div class="text-center py-12 sm:py-16 text-tropical-text/40">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 bg-tropical-bg rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 sm:w-10 sm:h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    </div>
+                    <p class="text-base sm:text-lg font-semibold mb-2">{lang === 'en' ? 'Content not available' : 'Contenido no disponible'}</p>
+                    <p class="text-sm">{lang === 'en' ? 'Terms and conditions are being updated.' : 'Los términos y condiciones están siendo actualizados.'}</p>
+                </div>
+            )}
+        </div>
+
+        <!-- Contact CTA -->
+        <div class="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-tropical-primary/5 to-tropical-secondary/5 border border-tropical-primary/20">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-tropical-primary/10 flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-tropical-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-tropical-text mb-1">{lang === 'en' ? 'Questions about terms?' : '¿Preguntas sobre los términos?'}</h3>
+                    <p class="text-tropical-text/60 text-sm">{lang === 'en' ? 'Contact our team for more information.' : 'Contacta con nuestro equipo para más información.'}</p>
+                </div>
+                <a 
+                    href={`/${lang}/contacto`} 
+                    class="inline-flex items-center justify-center h-11 px-6 rounded-xl bg-tropical-primary text-white font-bold hover:bg-tropical-primary/90 transition-colors shadow-lg shadow-tropical-primary/20 touch-manipulation"
+                >
+                    {lang === 'en' ? 'Contact Us' : 'Contactar'}
+                </a>
+            </div>
         </div>
     </div>
 </Layout>
