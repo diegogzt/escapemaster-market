@@ -1,26 +1,20 @@
-FROM node:20-alpine AS base
+FROM node:20-alpine
 WORKDIR /app
 
-# ── deps: install prod deps only ──────────────────────────────────────────────
-FROM base AS deps
-COPY package.json ./
-RUN npm install --omit=dev
-
-# ── builder: full install + build ─────────────────────────────────────────────
-FROM base AS builder
-COPY package.json ./
-RUN npm install
-COPY . .
-RUN npm run build
-
-# ── runner: minimal production image ──────────────────────────────────────────
-FROM base AS runner
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
+# Install deps fresh (no lockfile — resolves platform-specific binaries)
+COPY package.json ./
+RUN npm install
+
+# Build
+COPY . .
+RUN npm run build
+
+# Remove dev deps after build
+RUN npm prune --omit=dev
 
 EXPOSE 4321
 CMD ["node", "./dist/server/entry.mjs"]
