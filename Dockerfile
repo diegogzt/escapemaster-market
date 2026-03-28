@@ -3,13 +3,13 @@ WORKDIR /app
 
 # ── deps: install prod deps only ──────────────────────────────────────────────
 FROM base AS deps
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+COPY package.json ./
+RUN npm install --omit=dev
 
 # ── builder: full install + build ─────────────────────────────────────────────
 FROM base AS builder
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json ./
+RUN npm install
 COPY . .
 RUN npm run build
 
