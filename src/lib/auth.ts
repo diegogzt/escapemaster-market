@@ -1,7 +1,9 @@
-// Auth client library — calls local /api/auth/* endpoints
-// All auth runs against PostgreSQL on the SSH server (no Supabase)
+// Auth client library — calls API server endpoints
+// All auth runs against PostgreSQL via the API server (no Supabase)
 
 import { $user, $token, type UserData } from "./store";
+
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
 
 export interface User {
   id: string;
@@ -66,7 +68,7 @@ async function handleResponse(response: Response) {
 
 export const auth = {
   async login(email: string, password: string) {
-    const response = await fetch("/api/auth/login", {
+    const response = await fetch(`${API_BASE}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -110,7 +112,7 @@ export const auth = {
     full_name: string;
     organization_name?: string;
   }) {
-    const response = await fetch("/api/auth/register", {
+    const response = await fetch(`${API_BASE}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -129,7 +131,7 @@ export const auth = {
   },
 
   async verifyEmailCode(email: string, code: string) {
-    const response = await fetch("/api/auth/verify", {
+    const response = await fetch(`${API_BASE}/auth/verify`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, code }),
@@ -147,7 +149,7 @@ export const auth = {
   },
 
   async forgotPassword(email: string) {
-    const response = await fetch("/api/auth/forgot-password", {
+    const response = await fetch(`${API_BASE}/auth/forgot-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
@@ -157,7 +159,7 @@ export const auth = {
   },
 
   async resetPassword(email: string, code: string, newPassword: string) {
-    const response = await fetch("/api/auth/reset-password", {
+    const response = await fetch(`${API_BASE}/auth/reset-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, code, newPassword }),
@@ -167,7 +169,7 @@ export const auth = {
   },
 
   async verifyResetCode(email: string, code: string) {
-    const response = await fetch("/api/auth/verify-reset-code", {
+    const response = await fetch(`${API_BASE}/auth/verify-reset-code`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, code }),
@@ -177,7 +179,7 @@ export const auth = {
   },
 
   async resendVerification(email: string) {
-    const response = await fetch("/api/auth/resend", {
+    const response = await fetch(`${API_BASE}/auth/resend`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
@@ -208,7 +210,7 @@ export const auth = {
     if (!token) return { user: null, token: null };
 
     try {
-      const response = await fetch("/api/auth/me", {
+      const response = await fetch(`${API_BASE}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -257,7 +259,7 @@ export const auth = {
       organizationName?: string;
     },
   ) {
-    const response = await fetch("/api/auth/google", {
+    const response = await fetch(`${API_BASE}/auth/google`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -280,7 +282,7 @@ export const auth = {
     const token = this.getToken();
     if (!token) throw new Error("No token found");
 
-    const response = await fetch("/api/auth/switch-to-enterprise", {
+    const response = await fetch(`${API_BASE}/auth/switch-to-enterprise`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

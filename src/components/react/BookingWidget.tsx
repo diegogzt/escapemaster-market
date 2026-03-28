@@ -291,7 +291,8 @@ export const BookingWidget: React.FC<BookingWidgetProps> = ({
 
       const startTimeISO = `${selectedDate}T${selectedTime}:00`;
 
-      const res = await fetch("/api/payments/create-checkout", {
+      const apiBase = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
+      const res = await fetch(`${apiBase}/payments/create-checkout`, {
         method: "POST",
         headers,
         body: JSON.stringify({
@@ -321,9 +322,20 @@ export const BookingWidget: React.FC<BookingWidgetProps> = ({
         });
       }
 
-      // Redirect to Stripe Checkout
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+      // Submit form to Redsys TPV
+      if (data.redsysUrl && data.formParams) {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = data.redsysUrl;
+        Object.entries(data.formParams as Record<string, string>).forEach(([key, value]) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = value;
+          form.appendChild(input);
+        });
+        document.body.appendChild(form);
+        form.submit();
         return;
       }
 
@@ -378,7 +390,7 @@ export const BookingWidget: React.FC<BookingWidgetProps> = ({
       perSession: "/sesión",
       payNow: "Pagar ahora",
       processing: "Procesando...",
-      securePayment: "Pago seguro con Stripe",
+      securePayment: "Pago seguro con Redsys TPV",
       cancelPolicy: "Cancelación gratuita hasta 24h antes",
       success: "¡Reserva confirmada!",
       successDesc: "Recibirás un email de confirmación en breve",
@@ -419,7 +431,7 @@ export const BookingWidget: React.FC<BookingWidgetProps> = ({
       perSession: "/session",
       payNow: "Pay now",
       processing: "Processing...",
-      securePayment: "Secure payment with Stripe",
+      securePayment: "Secure payment with Redsys TPV",
       cancelPolicy: "Free cancellation up to 24h before",
       success: "Booking confirmed!",
       successDesc: "You'll receive a confirmation email shortly",
