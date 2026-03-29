@@ -253,7 +253,7 @@ const t = lang === 'en' ? {
 
       try {
         const token = localStorage.getItem('em_token');
-        const response = await fetch('https://escapemaster.es/api/players/me', {
+        const response = await fetch('/api/players/me', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
