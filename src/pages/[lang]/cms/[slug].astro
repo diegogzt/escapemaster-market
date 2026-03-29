@@ -1,0 +1,24 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { CMSPageRenderer } from '../../../components/CMSPageRenderer';
+import { getCMSPageFromAPI } from '../../../lib/cms';
+
+const { lang, slug } = Astro.params;
+
+if (!lang || !slug) {
+  return Astro.redirect('/es/');
+}
+
+const cmsPage = await getCMSPageFromAPI(slug, lang);
+
+if (!cmsPage) {
+  return Astro.redirect(`/${lang}/`);
+}
+
+const title = lang === 'en' && cmsPage.title_en ? cmsPage.title_en : cmsPage.title_es;
+const description = lang === 'en' && cmsPage.description_en ? cmsPage.description_en : cmsPage.description_es;
+---
+
+<Layout title={title} description={description} lang={lang}>
+  <CMSPageRenderer client:load sections={cmsPage.sections} />
+</Layout>

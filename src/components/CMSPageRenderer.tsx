@@ -3,22 +3,53 @@ import { cn } from "../lib/utils";
 import { Button } from "./ui/Button";
 import { Badge } from "./ui/Badge";
 import { Card } from "./ui/Card";
-import { GameCard } from "./GameCard";
-import { HeroSearchBar } from "./HeroSearchBar";
+import { Input } from "./ui/Input";
 import { SectionTitle } from "./ui/SectionTitle";
 import { SectionContainer } from "./ui/SectionContainer";
 import { Container } from "./ui/Container";
+import { GameGrid } from "./ui/GameGrid";
+import { GameCard } from "./GameCard";
+import { HeroSearchBar } from "./HeroSearchBar";
+import { Header } from "./Header";
+import { NearYouSection } from "./NearYouSection";
+import { AdvancedFilters } from "./react/AdvancedFilters";
+import { AuthStatus } from "./react/AuthStatus";
+import { BookingWidget } from "./react/BookingWidget";
+import { ChatWidget } from "./react/ChatWidget";
+import { MapSearch } from "./react/MapSearch";
+import { RouteBulkBooking } from "./react/RouteBulkBooking";
+import { SingleGameMap } from "./react/SingleGameMap";
+import { SocialFeed } from "./react/SocialFeed";
+import { UserDashboard } from "./react/UserDashboard";
+import { OnboardingFlow } from "./react/OnboardingFlow";
 import type { CMSSection } from "../lib/cms";
 
 const componentMap: Record<string, React.ComponentType<any>> = {
-  button: Button,
-  badge: Badge,
-  card: Card,
-  game_card: GameCard,
-  hero_search_bar: HeroSearchBar,
-  section_title: SectionTitle,
-  section_container: SectionContainer,
-  container: Container,
+  "button": Button,
+  "badge": Badge,
+  "card": Card,
+  "input": Input,
+  "container": Container,
+  "section-container": SectionContainer,
+  "section-title": SectionTitle,
+  "game-card": GameCard,
+  "game-grid": GameGrid,
+  "hero-banner": HeroSearchBar,
+  "hero-search-bar": HeroSearchBar,
+  "header": Header,
+  "footer": () => null,
+  "near-you-section": NearYouSection,
+  "advanced-filters": AdvancedFilters,
+  "auth-status": AuthStatus,
+  "booking-widget": BookingWidget,
+  "chat-widget": ChatWidget,
+  "map-search": MapSearch,
+  "route-bulk-booking": RouteBulkBooking,
+  "single-game-map": SingleGameMap,
+  "social-feed": SocialFeed,
+  "user-dashboard": UserDashboard,
+  "route-card": Card,
+  "route-card": Card,
 };
 
 interface CMSPageRendererProps {
@@ -27,12 +58,14 @@ interface CMSPageRendererProps {
 }
 
 export function CMSPageRenderer({ sections, className }: CMSPageRendererProps) {
+  console.log('[CMSPageRenderer] Rendering sections:', sections?.length);
+  
   if (!sections || sections.length === 0) {
     return (
       <div className={cn("min-h-[400px] flex items-center justify-center bg-muted/20", className)}>
         <div className="text-center p-8">
-          <p className="text-muted-foreground text-lg">Esta página aún no tiene contenido.</p>
-          <p className="text-muted-foreground/60 text-sm mt-2">Añade secciones desde el panel de administración.</p>
+          <p className="text-tropical-text text-lg">Esta página aún no tiene contenido.</p>
+          <p className="text-tropical-text/60 text-sm mt-2">Añade secciones desde el panel de administración.</p>
         </div>
       </div>
     );
@@ -50,11 +83,17 @@ export function CMSPageRenderer({ sections, className }: CMSPageRendererProps) {
             return (
               <div 
                 key={section.id} 
-                className="p-4 bg-muted/10 border border-border m-2 rounded-lg"
+                className="p-4 bg-tropical-card/50 border border-border m-2 rounded-lg"
               >
-                <p className="text-sm text-muted-foreground">
-                  Componente no encontrado: <code className="font-mono">{section.component_slug}</code>
+                <p className="text-sm text-tropical-text">
+                  Componente no encontrado: <code className="font-mono text-tropical-primary">{section.component_slug}</code>
                 </p>
+                <details className="mt-2 text-xs text-muted-foreground">
+                  <summary>Props disponibles</summary>
+                  <pre className="mt-1 p-2 bg-muted rounded overflow-auto">
+                    {JSON.stringify(section.props, null, 2)}
+                  </pre>
+                </details>
               </div>
             );
           }
