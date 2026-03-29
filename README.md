@@ -2,11 +2,11 @@
 
 Marketplace B2C donde los jugadores buscan, filtran y reservan salas de escape room.
 
-**URL:** escapemaster.es
+**URL:** https://escapemaster.es
 
 ## Stack
 
-- Astro 5 SSR (`output: 'server'`, `@astrojs/vercel`)
+- Astro 5 SSR (`output: 'server'`, `@astrojs/node`)
 - React 19 (islands: `client:load`, `client:visible`)
 - Tailwind CSS v4
 - Nanostores (estado client-side)
