@@ -3,6 +3,11 @@ import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import node from '@astrojs/node';
 import tailwindcss from '@tailwindcss/vite';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const workspaceRoot = path.resolve(__dirname, '../..');
 
 // https://astro.build/config
 export default defineConfig({
@@ -13,6 +18,11 @@ export default defineConfig({
   integrations: [react()],
   vite: {
     plugins: [tailwindcss()],
+    resolve: {
+      alias: {
+        '@escapemaster/ui-components': path.resolve(workspaceRoot, 'packages/escapemaster-ui-components/dist/index.mjs')
+      }
+    }
   },
   i18n: {
     defaultLocale: "es",
@@ -23,8 +33,6 @@ export default defineConfig({
     fallback: {
       en: "es"
     },
-    // Prevent API routes from being prefixed with /es or /en
-    // This fixes 404s when fetching /api/... from the browser
     exclude: ['/api/**/*']
   }
 });

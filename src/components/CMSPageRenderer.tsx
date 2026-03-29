@@ -1,26 +1,29 @@
 import * as React from "react";
 import { cn } from "../lib/utils";
-import { Button } from "./ui/Button";
-import { Badge } from "./ui/Badge";
-import { Card } from "./ui/Card";
-import { Input } from "./ui/Input";
-import { SectionTitle } from "./ui/SectionTitle";
-import { SectionContainer } from "./ui/SectionContainer";
-import { Container } from "./ui/Container";
-import { GameGrid } from "./ui/GameGrid";
-import { GameCard } from "./GameCard";
-import { HeroSearchBar } from "./HeroSearchBar";
+import {
+  Button,
+  Badge,
+  Card,
+  Input,
+  Container,
+  SectionContainer,
+  SectionTitle,
+  GameGrid,
+  GameCard,
+  HeroSearchBar,
+  HeroBanner,
+  AdvancedFilters,
+  AuthStatus,
+  BookingWidget,
+  ChatWidget,
+  MapSearch,
+  UserDashboard,
+} from "@escapemaster/ui-components";
 import { Header } from "./Header";
 import { NearYouSection } from "./NearYouSection";
-import { AdvancedFilters } from "./react/AdvancedFilters";
-import { AuthStatus } from "./react/AuthStatus";
-import { BookingWidget } from "./react/BookingWidget";
-import { ChatWidget } from "./react/ChatWidget";
-import { MapSearch } from "./react/MapSearch";
 import { RouteBulkBooking } from "./react/RouteBulkBooking";
 import { SingleGameMap } from "./react/SingleGameMap";
 import { SocialFeed } from "./react/SocialFeed";
-import { UserDashboard } from "./react/UserDashboard";
 import { OnboardingFlow } from "./react/OnboardingFlow";
 import type { CMSSection } from "../lib/cms";
 
@@ -34,7 +37,7 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   "section-title": SectionTitle,
   "game-card": GameCard,
   "game-grid": GameGrid,
-  "hero-banner": HeroSearchBar,
+  "hero-banner": HeroBanner,
   "hero-search-bar": HeroSearchBar,
   "header": Header,
   "footer": () => null,
@@ -48,7 +51,6 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   "single-game-map": SingleGameMap,
   "social-feed": SocialFeed,
   "user-dashboard": UserDashboard,
-  "route-card": Card,
   "route-card": Card,
 };
 
