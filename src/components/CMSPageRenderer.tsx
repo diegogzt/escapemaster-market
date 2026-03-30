@@ -18,7 +18,7 @@ import {
   ChatWidget,
   MapSearch,
   UserDashboard,
-} from "@escapemaster/ui-components";
+} from "@diegogzt/ui-components";
 import { Header } from "./Header";
 import { NearYouSection } from "./NearYouSection";
 import { RouteBulkBooking } from "./react/RouteBulkBooking";
