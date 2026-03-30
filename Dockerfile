@@ -7,7 +7,7 @@ ENV PORT=4321
 
 # Install deps fresh (no lockfile — resolves platform-specific binaries)
 COPY package.json .npmrc ./
-RUN npm install
+RUN apk add --no-cache git && npm install
 
 # Build
 COPY . .
