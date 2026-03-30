@@ -7,8 +7,7 @@ ENV PORT=4321
 
 # Install deps fresh (no lockfile — resolves platform-specific binaries)
 COPY package.json .npmrc ./
-ARG GITHUB_TOKEN
-RUN npm config set //npm.pkg.github.com/:_authToken $GITHUB_TOKEN && npm install
+RUN npm install
 
 # Build
 COPY . .
