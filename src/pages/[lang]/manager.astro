@@ -265,22 +265,9 @@ const t = meta[lang as keyof typeof meta] || meta.es;
     <!-- NAV -->
     <nav class="fixed top-0 left-0 right-0 z-50 bg-dynamic-surface/90 backdrop-blur-md theme-border transition-all duration-300 border-b">
       <div class="max-w-7xl mx-auto flex items-center justify-between h-16 px-6 sm:px-8">
-        <!-- Logo SVG -->
-        <a href={`/${lang}/`} class="flex items-center gap-3 group text-dynamic-accent z-50">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1020 160" class="h-6 sm:h-8 w-auto transition-transform duration-500 group-hover:scale-105" style="fill: var(--tech-accent); stroke: var(--tech-accent);">
-            <path d="
-              M 28 60 L 28 127
-              M 28 60 L 72 60
-              M 28 93 L 65 93
-              M 28 127 L 72 127
-            " fill="none" stroke-width="16" stroke-linecap="round"/>
-            <text x="84" y="135" font-family="'Syne', sans-serif" font-size="115" font-weight="800" letter-spacing="-2" stroke="none">scape</text>
-            <path d="
-              M 470 127 L 470 76 C 470 54, 504 54, 504 76 L 504 127
-              M 504 76 C 504 54, 538 54, 538 76 L 538 127
-            " fill="none" stroke-width="16" stroke-linecap="round"/>
-            <text x="550" y="135" font-family="'Syne', sans-serif" font-size="115" font-weight="800" letter-spacing="-2" stroke="none">aster</text>
-          </svg>
+        <!-- Logo -->
+        <a href={`/${lang}/`} class="group z-50 transition-transform duration-500 hover:scale-105">
+          <span class="font-display text-xl sm:text-2xl font-extrabold tracking-tight" style="color: var(--tech-accent);">EscapeMaster</span>
         </a>
 
         <!-- Center Links -->
@@ -298,10 +285,10 @@ const t = meta[lang as keyof typeof meta] || meta.es;
             EscapeMaster
           </a>
           <a href="https://manager.escapemaster.es" class="hidden sm:inline-flex items-center font-mono text-xs font-bold uppercase tracking-[0.1em] text-[var(--tech-text-muted)] hover:text-dynamic-accent transition-colors">
-            {lang === 'es' ? 'Log In' : 'Log In'}
+            {lang === 'es' ? 'Entrar' : 'Log In'}
           </a>
           <a href="#waitlist" class="inline-flex items-center justify-center h-10 px-6 bg-dynamic-accent text-dynamic-bg font-mono text-xs font-bold uppercase tracking-[0.1em] hover:opacity-90 transition-colors">
-            {lang === 'es' ? 'Get Started' : 'Get Started'}
+            {lang === 'es' ? 'Empezar' : 'Get Started'}
           </a>
         </div>
       </div>
@@ -324,9 +311,9 @@ const t = meta[lang as keyof typeof meta] || meta.es;
 
             <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight mb-8">
               {lang === 'es' ? (
-                <>RESERVA.<br/>GESTIONA.<br/><span class="text-transparent bg-clip-text bg-dynamic-accent" style="-webkit-text-stroke: 1px var(--tech-accent);">DOMINA.</span></>
+                <>RESERVA.<br/>GESTIONA.<br/><span class="text-dynamic-accent">DOMINA.</span></>
               ) : (
-                <>BOOK.<br/>MANAGE.<br/><span class="text-transparent bg-clip-text bg-dynamic-accent" style="-webkit-text-stroke: 1px var(--tech-accent);">DOMINATE.</span></>
+                <>BOOK.<br/>MANAGE.<br/><span class="text-dynamic-accent">DOMINATE.</span></>
               )}
             </h1>
 
@@ -443,6 +430,10 @@ const t = meta[lang as keyof typeof meta] || meta.es;
         <span>{lang === 'es' ? '99.9% Disponibilidad' : '99.9% Uptime'}</span>
         <span>•</span>
         <span>{lang === 'es' ? 'Asistido por IA' : 'AI Assisted'}</span>
+        <span>•</span>
+        <span>Webhooks</span>
+        <span>•</span>
+        <span>Enterprise Ready</span>
       </div>
     </div>
 
@@ -605,7 +596,7 @@ const t = meta[lang as keyof typeof meta] || meta.es;
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           
           <!-- Free Trial -->
-          <div class="tech-card p-8 reveal-left">
+          <div class="tech-card p-8 reveal-left flex flex-col">
             <div class="font-mono text-[10px] uppercase tracking-widest text-[var(--tech-text-muted)] mb-4">{lang === 'es' ? 'Prueba gratuita' : 'Free Trial'}</div>
             <div class="flex items-baseline gap-1 mb-2">
               <div class="font-display text-5xl font-extrabold text-dynamic-accent">0<span class="text-2xl">€</span></div>
@@ -619,13 +610,13 @@ const t = meta[lang as keyof typeof meta] || meta.es;
                 lang === 'es' ? 'Soporte por email' : 'Email support',
               ].map(f => <li class="flex items-start gap-2"><span class="text-dynamic-accent mt-0.5">›</span>{f}</li>)}
             </ul>
-            <a href="#waitlist" class="block w-full text-center border theme-border font-mono text-xs font-bold uppercase tracking-widest py-4 hover:bg-dynamic-accent hover:text-dynamic-bg transition-all duration-300">
+            <a href="#waitlist" class="mt-auto block w-full text-center border theme-border font-mono text-xs font-bold uppercase tracking-widest py-4 hover:bg-dynamic-accent hover:text-dynamic-bg transition-all duration-300">
               {lang === 'es' ? 'Empezar gratis' : 'Start free'}
             </a>
           </div>
 
           <!-- Standard -->
-          <div class="tech-card p-8 reveal-up border-dynamic-accent relative animate-pulse-border" style="border-width: 2px; transition-delay: 0.1s">
+          <div class="tech-card p-8 reveal-up border-dynamic-accent relative animate-pulse-border flex flex-col" style="border-width: 2px; transition-delay: 0.1s">
             <div class="absolute -top-3 left-8 bg-dynamic-accent text-dynamic-bg font-mono text-[9px] uppercase tracking-widest px-3 py-1">{lang === 'es' ? 'Más popular' : 'Most popular'}</div>
             <div class="font-mono text-[10px] uppercase tracking-widest text-dynamic-accent mb-4">Standard</div>
             <div class="flex items-baseline gap-1 mb-2">
@@ -641,13 +632,13 @@ const t = meta[lang as keyof typeof meta] || meta.es;
                 lang === 'es' ? 'Soporte prioritario' : 'Priority support',
               ].map(f => <li class="flex items-start gap-2"><span class="text-dynamic-accent mt-0.5">›</span>{f}</li>)}
             </ul>
-            <a href="#waitlist" class="block w-full text-center bg-dynamic-accent text-dynamic-bg font-mono text-xs font-bold uppercase tracking-widest py-4 hover:opacity-90 transition-all duration-300">
+            <a href="#waitlist" class="mt-auto block w-full text-center bg-dynamic-accent text-dynamic-bg font-mono text-xs font-bold uppercase tracking-widest py-4 hover:opacity-90 transition-all duration-300">
               {lang === 'es' ? 'Empezar ahora' : 'Get started'}
             </a>
           </div>
 
           <!-- Pro -->
-          <div class="tech-card p-8 reveal-right" style="transition-delay: 0.2s">
+          <div class="tech-card p-8 reveal-right flex flex-col" style="transition-delay: 0.2s">
             <div class="font-mono text-[10px] uppercase tracking-widest text-[var(--tech-text-muted)] mb-4">Pro</div>
             <div class="flex items-baseline gap-1 mb-2">
               <div class="font-display text-5xl font-extrabold text-dynamic-accent">60<span class="text-2xl">€</span></div>
@@ -664,7 +655,7 @@ const t = meta[lang as keyof typeof meta] || meta.es;
                 lang === 'es' ? 'Marca blanca disponible' : 'White-label available',
               ].map(f => <li class="flex items-start gap-2"><span class="text-dynamic-accent mt-0.5">›</span>{f}</li>)}
             </ul>
-            <a href="mailto:hello@escapemaster.es" class="block w-full text-center border theme-border font-mono text-xs font-bold uppercase tracking-widest py-4 hover:bg-dynamic-accent hover:text-dynamic-bg transition-all duration-300">
+            <a href="mailto:hello@escapemaster.es" class="mt-auto block w-full text-center border theme-border font-mono text-xs font-bold uppercase tracking-widest py-4 hover:bg-dynamic-accent hover:text-dynamic-bg transition-all duration-300">
               {lang === 'es' ? 'Contactar' : 'Contact us'}
             </a>
           </div>
@@ -766,7 +757,7 @@ const t = meta[lang as keyof typeof meta] || meta.es;
             <details class="border theme-border group reveal-up" style={`transition-delay: ${i * 0.05}s`}>
               <summary class="flex items-center justify-between p-6 cursor-pointer font-mono text-xs font-bold uppercase tracking-widest text-[var(--tech-text)] hover:text-dynamic-accent transition-colors list-none">
                 <span>{item.q}</span>
-                <span class="text-dynamic-accent text-lg group-open:rotate-45 transition-transform duration-300 ml-4 flex-shrink-0">+</span>
+                <svg class="text-dynamic-accent w-4 h-4 ml-4 shrink-0 transition-transform duration-300 group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
               </summary>
               <div class="px-6 pb-6 text-sm text-[var(--tech-text-muted)] leading-relaxed border-t theme-border pt-4">{item.a}</div>
             </details>
@@ -925,20 +916,7 @@ const t = meta[lang as keyof typeof meta] || meta.es;
         
         <div class="md:col-span-2">
           <div class="flex items-center gap-3 mb-6 relative z-20">
-             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1020 160" class="h-10 w-auto" style="fill: var(--tech-bg); stroke: var(--tech-bg);">
-               <path d="
-                 M 28 60 L 28 127
-                 M 28 60 L 72 60
-                 M 28 93 L 65 93
-                 M 28 127 L 72 127
-               " fill="none" stroke-width="16" stroke-linecap="round"/>
-               <text x="84" y="135" font-family="'Syne', sans-serif" font-size="115" font-weight="800" letter-spacing="-2" stroke="none">scape</text>
-               <path d="
-                 M 470 127 L 470 76 C 470 54, 504 54, 504 76 L 504 127
-                 M 504 76 C 504 54, 538 54, 538 76 L 538 127
-               " fill="none" stroke-width="16" stroke-linecap="round"/>
-               <text x="550" y="135" font-family="'Syne', sans-serif" font-size="115" font-weight="800" letter-spacing="-2" stroke="none">aster</text>
-             </svg>
+            <span class="font-display text-2xl font-extrabold tracking-tight" style="color: var(--tech-bg);">EscapeMaster</span>
           </div>
           <p class="opacity-60 text-sm max-w-sm font-grotesk relative z-20">
             {lang === 'es'
@@ -948,7 +926,7 @@ const t = meta[lang as keyof typeof meta] || meta.es;
         </div>
         
         <div class="font-mono text-xs">
-          <h4 class="opacity-40 uppercase tracking-widest mb-4">System</h4>
+          <h4 class="opacity-40 uppercase tracking-widest mb-4">{lang === 'es' ? 'Navegación' : 'Navigation'}</h4>
           <ul class="space-y-3">
             <li><a href="#features" class="hover:opacity-60 transition-opacity">{lang === 'es' ? 'Características' : 'Features'}</a></li>
             <li><a href="#compare" class="hover:opacity-60 transition-opacity">{lang === 'es' ? 'Comparativa' : 'Compare'}</a></li>
@@ -961,8 +939,8 @@ const t = meta[lang as keyof typeof meta] || meta.es;
         <div class="font-mono text-xs">
           <h4 class="opacity-40 uppercase tracking-widest mb-4">Legal</h4>
           <ul class="space-y-3">
-            <li><a href={`/${lang}/privacy`} class="hover:opacity-60 transition-opacity">{lang === 'es' ? 'Privacidad' : 'Privacy Policy'}</a></li>
-            <li><a href={`/${lang}/terms`} class="hover:opacity-60 transition-opacity">{lang === 'es' ? 'Términos' : 'Terms of Service'}</a></li>
+            <li><a href={`/${lang}/privacidad`} class="hover:opacity-60 transition-opacity">{lang === 'es' ? 'Privacidad' : 'Privacy Policy'}</a></li>
+            <li><a href={`/${lang}/terminos`} class="hover:opacity-60 transition-opacity">{lang === 'es' ? 'Términos' : 'Terms of Service'}</a></li>
             <li><a href="mailto:hello@escapemaster.es" class="hover:opacity-60 transition-opacity">{lang === 'es' ? 'Contacto' : 'Contact'}</a></li>
           </ul>
         </div>

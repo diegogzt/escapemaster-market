@@ -28,7 +28,7 @@ const t = lang === 'en' ? {
   title: 'Iniciar Sesión',
   email: 'Correo electrónico',
   password: 'Contraseña',
-  button: 'Entrar',
+  button: 'Iniciar sesión',
   loading: 'Entrando...',
   remember: 'Recordarme',
   noAccount: '¿No tienes cuenta?',
@@ -46,10 +46,10 @@ const t = lang === 'en' ? {
 };
 ---
 
-<Layout title={`${t.title} | EscapeMaster`}>
-  <main class="min-h-screen pt-24 sm:pt-32 pb-24 sm:pb-20 bg-tropical-bg flex items-start sm:items-center justify-center">
+<Layout title={`${t.title} | EscapeMaster`} hideFooter>
+  <main class="min-h-[calc(100vh-6rem)] py-8 sm:py-12 bg-tropical-bg flex items-center justify-center">
     <div class="w-full max-w-md mx-auto px-4 sm:px-0">
-      <div class="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden border border-tropical-secondary/20">
+      <div class="bg-white rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden border border-tropical-secondary/10">
         <div class="p-6 sm:p-8">
           <div class="text-center mb-8 sm:mb-10">
             <div class="w-16 h-16 bg-tropical-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -111,7 +111,7 @@ const t = lang === 'en' ? {
             </Button>
           </form>
 
-          <div class="relative my-8">
+          <div class="relative my-5">
             <div class="absolute inset-0 flex items-center">
               <span class="w-full border-t border-tropical-secondary/20"></span>
             </div>

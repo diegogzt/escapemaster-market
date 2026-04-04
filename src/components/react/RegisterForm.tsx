@@ -143,13 +143,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ lang }) => {
               className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
                 step >= s
                   ? "bg-tropical-primary text-white shadow-lg scale-110"
-                  : "bg-tropical-secondary/10 text-tropical-text/40"
+                  : "bg-tropical-secondary/20 text-tropical-text/60"
               }`}
             >
               {step > s ? <Check size={20} /> : s + 1}
             </div>
             <span
-              className={`text-xs mt-2 font-medium transition-colors ${step >= s ? "text-tropical-primary" : "text-tropical-text/40"}`}
+              className={`text-xs mt-2 font-medium transition-colors ${step >= s ? "text-tropical-primary" : "text-tropical-text/60"}`}
             >
               {s === 0 ? "Tipo" : s === 1 ? "Datos" : "Verificación"}
             </span>
