@@ -250,7 +250,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ lang = 'es', initialConv
         <div className="w-20 h-20 bg-white rounded-[2rem] shadow-xl flex items-center justify-center mb-6">
           <MessageCircle className="w-10 h-10 text-tropical-primary" />
         </div>
-        <h3 className="text-2xl font-black text-tropical-text mb-2">
+        <h3 className="text-xl font-bold text-tropical-primary mb-2">
           {lang === 'en' ? 'Coordination is key' : 'La coordinación es clave'}
         </h3>
         <p className="text-tropical-text/60 max-w-xs mb-8">
@@ -274,7 +274,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ lang = 'es', initialConv
       <div className={`w-full sm:w-96 border-r border-gray-50 flex flex-col ${activeConversation ? 'hidden sm:flex' : 'flex'}`}>
         <div className="p-8 border-b border-gray-50 bg-white/50 backdrop-blur-md sticky top-0 z-10">
           <div className="flex items-center justify-between mb-6">
-             <h2 className="font-black text-2xl text-tropical-text flex items-center gap-3">
+             <h2 className="font-bold text-lg text-tropical-primary flex items-center gap-3">
               {lang === 'en' ? 'Inbox' : 'Mensajes'}
               <span className="w-2 h-2 rounded-full bg-tropical-primary animate-pulse"></span>
             </h2>
@@ -436,30 +436,49 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ lang = 'es', initialConv
                  </div>
               ) : messages.map((msg, idx) => {
                 const isOwn = msg.sender_id === currentUserId;
+                const prevMsg = messages[idx - 1];
                 const nextMsg = messages[idx + 1];
                 const isContinued = nextMsg?.sender_id === msg.sender_id;
-                
+
+                // Date separator: show when day changes from previous message
+                const msgDate = new Date(msg.created_at);
+                const prevDate = prevMsg ? new Date(prevMsg.created_at) : null;
+                const showDateSep = !prevDate || msgDate.toDateString() !== prevDate.toDateString();
+                const today = new Date();
+                const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+                const dateLabel = msgDate.toDateString() === today.toDateString()
+                  ? (lang === 'en' ? 'Today' : 'Hoy')
+                  : msgDate.toDateString() === yesterday.toDateString()
+                    ? (lang === 'en' ? 'Yesterday' : 'Ayer')
+                    : msgDate.toLocaleDateString(lang === 'en' ? 'en-US' : 'es-ES', { day: 'numeric', month: 'short' });
+
                 return (
-                  <div key={msg.id} className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} ${isContinued ? 'mb-1' : 'mb-6'}`}>
-                    {!isOwn && !isContinued && (
-                      <p className="text-[10px] font-black text-tropical-primary uppercase tracking-widest mb-1.5 ml-2">{msg.sender_name}</p>
-                    )}
-                    <div className={`relative px-5 py-3.5 rounded-[2rem] text-[14px] leading-relaxed max-w-[85%] sm:max-w-[70%] shadow-lg shadow-black/5 ${
-                      isOwn
-                        ? 'bg-tropical-primary text-white rounded-tr-sm'
-                        : 'bg-white text-tropical-text border border-gray-100 rounded-tl-sm'
-                    }`}>
-                      {msg.is_deleted ? (
-                        <em className="opacity-40">{lang === 'en' ? 'This message was deleted' : 'Mensaje eliminado'}</em>
-                      ) : (
-                        msg.content
-                      )}
-                      
-                      <div className={`absolute bottom-0 ${isOwn ? '-right-12' : '-left-12'} opacity-0 group-hover:opacity-100 transition-opacity`}>
-                         <span className="text-[9px] font-black text-gray-300">{formatTime(msg.created_at).toUpperCase()}</span>
+                  <React.Fragment key={msg.id}>
+                    {showDateSep && (
+                      <div className="flex items-center justify-center my-4">
+                        <span className="px-4 py-1 bg-white border border-gray-100 rounded-full text-[10px] font-bold text-tropical-text/40 uppercase tracking-widest shadow-sm">{dateLabel}</span>
                       </div>
+                    )}
+                    <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} ${isContinued ? 'mb-1' : 'mb-4'}`}>
+                      {!isOwn && !isContinued && (
+                        <p className="text-[10px] font-bold text-tropical-primary uppercase tracking-widest mb-1.5 ml-2">{msg.sender_name}</p>
+                      )}
+                      <div className={`px-5 py-3.5 rounded-[2rem] text-[14px] leading-relaxed max-w-[85%] sm:max-w-[70%] shadow-lg shadow-black/5 ${
+                        isOwn
+                          ? 'bg-tropical-primary text-white rounded-tr-sm'
+                          : 'bg-white text-tropical-text border border-gray-100 rounded-tl-sm'
+                      }`}>
+                        {msg.is_deleted ? (
+                          <em className="opacity-40">{lang === 'en' ? 'This message was deleted' : 'Mensaje eliminado'}</em>
+                        ) : (
+                          msg.content
+                        )}
+                      </div>
+                      <span className={`text-[9px] font-medium mt-1 ${isOwn ? 'text-tropical-text/30 mr-2' : 'text-tropical-text/30 ml-2'}`}>
+                        {formatTime(msg.created_at)}
+                      </span>
                     </div>
-                  </div>
+                  </React.Fragment>
                 );
               })}
               <div ref={messagesEndRef} />
@@ -496,13 +515,13 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ lang = 'es', initialConv
                 <Sparkles className="absolute -top-2 -right-2 text-tropical-accent animate-pulse" />
               </div>
             </div>
-            <h3 className="text-3xl font-black text-tropical-text mb-4">
+            <h3 className="text-xl font-bold text-tropical-primary mb-3">
               {lang === 'en' ? 'Select a chat' : 'Selecciona un chat'}
             </h3>
-            <p className="text-tropical-text/40 max-w-sm font-bold leading-relaxed">
-              {lang === 'en' 
-                ? 'coordinate routes, find teammates, and build your escape room reputation.' 
-                : 'coordina tus rutas, encuentra compañeros y forja tu reputación como escapista.'}
+            <p className="text-tropical-text/40 max-w-sm text-sm leading-relaxed">
+              {lang === 'en'
+                ? 'Coordinate routes, find teammates, and build your escape room reputation.'
+                : 'Coordina tus rutas, encuentra compañeros y forja tu reputación como escapista.'}
             </p>
             
             <button 

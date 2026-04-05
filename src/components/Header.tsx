@@ -23,10 +23,11 @@ interface HeaderProps {
   lang?: string;
   translations?: {
     search: string;
+    marketplace: string;
     teams: string;
     routes: string;
     offers: string;
-    explore: string;
+    explore?: string;
     owner: string;
     login: string;
     profile?: string;
@@ -144,6 +145,7 @@ export const Header: React.FC<HeaderProps> = ({
     { name: t.marketplace, href: `/${lang}/marketplace` },
     { name: t.teams, href: `/${lang}/teams` },
     { name: t.routes, href: `/${lang}/routes` },
+    { name: t.offers, href: `/${lang}/offers` },
   ];
 
   return (

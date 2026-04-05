@@ -66,7 +66,7 @@ if (!listing) {
     <div class="max-w-5xl mx-auto px-4 sm:px-6 pt-4">
       <a 
         href={`/${lang}/marketplace`}
-        class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+        class="inline-flex items-center gap-2 text-gray-600 hover:text-tropical-primary transition-colors"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="m15 18-6-6 6-6"/>
@@ -100,7 +100,7 @@ if (!listing) {
           <div class="bg-white rounded-2xl p-6 shadow-sm">
             <div class="flex items-start justify-between mb-4">
               <div>
-                <h1 class="text-2xl font-bold text-gray-900 mb-1">
+                <h1 class="text-2xl font-bold text-tropical-primary mb-1">
                   {listing.room_name}
                 </h1>
                 <p class="text-gray-600">{listing.organization_name}</p>
@@ -141,7 +141,7 @@ if (!listing) {
             <!-- Description -->
             {listing.description && (
               <div class="border-t border-gray-100 pt-4">
-                <h3 class="font-bold text-gray-900 mb-2">
+                <h3 class="font-bold text-tropical-primary mb-2">
                   {lang === 'en' ? 'Description' : 'Descripción'}
                 </h3>
                 <p class="text-gray-600">{listing.description}</p>
@@ -158,7 +158,7 @@ if (!listing) {
               <div class="text-sm text-gray-500 mb-1">
                 {lang === 'en' ? 'Ticket Price' : 'Precio de la entrada'}
               </div>
-              <div class="text-4xl font-bold text-gray-900">
+              <div class="text-4xl font-bold text-tropical-primary">
                 {listing.price.toFixed(2)}€
               </div>
               {listing.price < listing.original_price && (
@@ -179,7 +179,7 @@ if (!listing) {
                 {listing.seller_name_display?.charAt(0) || 'U'}
               </div>
               <div class="flex-1">
-                <div class="text-sm font-medium text-gray-900">
+                <div class="text-sm font-medium text-tropical-primary">
                   {listing.seller_name_display}
                 </div>
                 <div class="text-xs text-gray-500">

@@ -102,7 +102,7 @@ if (tableExists) {
     <section class="bg-gradient-to-b from-tropical-primary to-tropical-secondary py-12 sm:py-16">
       <div class="max-w-7xl mx-auto px-4 sm:px-6">
         <div class="text-center">
-          <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
+          <h1 class="text-xl sm:text-2xl font-bold text-white mb-4">
             {lang === 'en' ? 'Ticket Marketplace' : 'Mercadillo de Entradas'}
           </h1>
           <p class="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto">
@@ -121,7 +121,7 @@ if (tableExists) {
               name="q" 
               value={q}
               placeholder={lang === 'en' ? 'Search rooms or cities...' : 'Buscar salas o ciudades...'}
-              class="flex-1 px-4 py-3 rounded-xl bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
+              class="flex-1 px-4 py-3 rounded-xl bg-white text-tropical-primary placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
             />
             <button 
               type="submit"
@@ -187,7 +187,7 @@ if (tableExists) {
                     <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
                   </svg>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">
+                <h3 class="text-lg font-bold text-tropical-primary mb-2">
                   {lang === 'en' ? 'Coming Soon' : 'Próximamente'}
                 </h3>
                 <p class="text-gray-600">
@@ -204,7 +204,7 @@ if (tableExists) {
                     <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
                   </svg>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">
+                <h3 class="text-lg font-bold text-tropical-primary mb-2">
                   {lang === 'en' ? 'No tickets available' : 'No hay entradas disponibles'}
                 </h3>
                 <p class="text-gray-600">
@@ -268,7 +268,7 @@ if (tableExists) {
 
                   <!-- Content -->
                   <div class="p-4">
-                    <h3 class="font-bold text-gray-900 mb-1 line-clamp-1 group-hover:text-tropical-primary transition-colors">
+                    <h3 class="font-bold text-tropical-primary mb-1 line-clamp-1 group-hover:text-tropical-primary transition-colors">
                       {listing.room_name}
                     </h3>
                     
