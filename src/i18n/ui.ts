@@ -20,9 +20,15 @@ export const ui = {
     "hero.title": "Descubre tu próxima",
     "hero.subtitle":
       "Explora y reserva los mejores Escape Rooms de España. Desde misterios antiguos hasta laboratorios futuristas.",
+    "hero.search.destination": "Destino",
+    "hero.search.destination_ph": "Ciudad, nombre...",
     "hero.search.where": "¿Dónde buscas?",
     "hero.search.when": "¿Cuándo?",
     "hero.search.players": "Jugadores",
+    "hero.search.players_ph": "Núm. jugadores",
+    "hero.search.difficulty": "Dificultad",
+    "hero.search.difficulty_any": "Cualquiera",
+    "hero.search.filters": "Filtros",
     "hero.search.button": "Buscar",
 
     // Games
@@ -188,9 +194,15 @@ export const ui = {
     "hero.title": "Discover your next",
     "hero.subtitle":
       "Explore and book the best Escape Rooms in Spain. From ancient mysteries to futuristic labs.",
+    "hero.search.destination": "Destination",
+    "hero.search.destination_ph": "City, name...",
     "hero.search.where": "Where?",
     "hero.search.when": "When?",
     "hero.search.players": "Players",
+    "hero.search.players_ph": "Num. players",
+    "hero.search.difficulty": "Difficulty",
+    "hero.search.difficulty_any": "Any",
+    "hero.search.filters": "Filters",
     "hero.search.button": "Search",
 
     // Games
