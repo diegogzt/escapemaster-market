@@ -1,7 +1,7 @@
 {
   "name": "escapemaster-market",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "scripts": {
     "dev": "astro dev",
     "dev:prod": "NODE_ENV=production astro dev",
