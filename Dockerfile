@@ -5,12 +5,12 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
-# Install deps fresh (no lockfile — resolves platform-specific binaries)
-COPY package.json .npmrc ./
-RUN apk add --no-cache git && npm install
+# Clone fresh from GitHub — bypasses Dokploy's stale build context
+RUN apk add --no-cache git && \
+    git clone --depth=1 --branch main https://github.com/diegogzt/escapemaster-market.git . && \
+    npm install
 
 # Build
-COPY . .
 RUN npm run build
 
 # Remove dev deps after build
