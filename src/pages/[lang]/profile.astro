@@ -162,13 +162,50 @@ const icons: Record<string, string> = {
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-auto text-gray-300"><path d="m9 18 6-6-6-6"/></svg>
                   </a>
                 ))}
-                <button 
+                <button
                   id="switchToEnterpriseBtn"
                   class="w-full flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 hover:bg-tropical-primary/5 active:bg-tropical-primary/10 transition-colors text-tropical-primary"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="10" width="20" height="12" rx="2" ry="2"/><path d="M7 10V5a5 5 0 0 1 10 0v5"/></svg>
                   <span class="font-bold text-sm sm:text-base">{lang === 'en' ? 'Switch to Business Account' : 'Convertir a cuenta de Empresa'}</span>
                 </button>
+
+                <!-- Modal: Confirmar cambio a empresa -->
+                <div id="enterpriseModal" class="hidden fixed inset-0 z-50 items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 sm:p-8 animate-in fade-in slide-in-from-bottom-4">
+                    <div class="flex items-center gap-3 mb-4">
+                      <div class="w-12 h-12 rounded-xl bg-tropical-primary/10 flex items-center justify-center shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-tropical-primary"><rect x="2" y="10" width="20" height="12" rx="2" ry="2"/><path d="M7 10V5a5 5 0 0 1 10 0v5"/></svg>
+                      </div>
+                      <div>
+                        <h3 class="text-lg font-bold text-tropical-text">{lang === 'en' ? 'Switch to Business Account' : 'Convertir a cuenta de Empresa'}</h3>
+                        <p class="text-xs text-tropical-text/50">{lang === 'en' ? 'This action cannot be undone' : 'Esta acción no se puede deshacer'}</p>
+                      </div>
+                    </div>
+
+                    <p class="text-tropical-text/70 text-sm leading-relaxed mb-6">
+                      {lang === 'en'
+                        ? 'Your account will be converted to a Business account. You will be able to manage escape rooms and organizations. Your current bookings and history will be preserved.'
+                        : 'Tu cuenta se convertirá en una cuenta de Empresa. Podrás gestionar salas de escape y organizaciones. Tus reservas e historial actuales se conservarán.'}
+                    </p>
+                    <div id="enterpriseModalError" class="hidden mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl"></div>
+                    <div class="flex gap-3">
+                      <button
+                        id="enterpriseModalCancel"
+                        class="flex-1 h-11 rounded-xl border border-tropical-secondary/20 text-tropical-text/70 font-semibold text-sm hover:bg-tropical-bg transition-colors"
+                      >
+                        {lang === 'en' ? 'Cancel' : 'Cancelar'}
+                      </button>
+                      <button
+                        id="enterpriseModalConfirm"
+                        class="flex-1 h-11 rounded-xl bg-tropical-primary text-white font-bold text-sm hover:bg-tropical-secondary transition-colors flex items-center justify-center gap-2"
+                      >
+                        <svg id="enterpriseModalSpinner" class="hidden animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                        <span id="enterpriseModalConfirmText">{lang === 'en' ? 'Convert Account' : 'Convertir cuenta'}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 <button 
                   id="logoutBtn"
                   class="w-full flex items-center gap-3 px-4 sm:px-5 py-3.5 sm:py-4 hover:bg-red-50 active:bg-red-100 transition-colors text-red-600"
@@ -359,29 +396,51 @@ const icons: Record<string, string> = {
       auth.logout();
     });
 
-    // Switch to enterprise button
-    const switchBtn = document.getElementById('switchToEnterpriseBtn');
-    if (switchBtn) {
-      switchBtn.addEventListener('click', async () => {
-        const confirmed = confirm(lang === 'en' 
-          ? 'Are you sure you want to convert your account to a Business account? This will allow you to manage escape rooms and organizations.' 
-          : '¿Estás seguro de que quieres convertir tu cuenta en una cuenta de Empresa? Esto te permitirá gestionar salas de escape y organizaciones.');
-        
-        if (confirmed) {
-          try {
-            switchBtn.textContent = lang === 'en' ? 'Converting...' : 'Convirtiendo...';
-            switchBtn.disabled = true;
-            await auth.switchToEnterprise();
-            window.location.href = `/${lang}/onboarding`;
-          } catch (err: any) {
-            console.error('Switch to enterprise error:', err);
-            alert(err.message || (lang === 'en' ? 'Error converting account' : 'Error al convertir la cuenta'));
-            switchBtn.textContent = lang === 'en' ? 'Switch to Business Account' : 'Convertir a cuenta de Empresa';
-            switchBtn.disabled = false;
-          }
+    // Switch to enterprise — modal
+    const switchBtn = document.getElementById('switchToEnterpriseBtn') as HTMLButtonElement | null;
+    const modal = document.getElementById('enterpriseModal');
+    const modalCancel = document.getElementById('enterpriseModalCancel');
+    const modalConfirm = document.getElementById('enterpriseModalConfirm') as HTMLButtonElement | null;
+    const modalConfirmText = document.getElementById('enterpriseModalConfirmText');
+    const modalSpinner = document.getElementById('enterpriseModalSpinner');
+    const modalError = document.getElementById('enterpriseModalError');
+
+    const showModal = () => {
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      if (modalError) { modalError.classList.add('hidden'); modalError.textContent = ''; }
+    };
+    const hideModal = () => {
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    };
+
+    switchBtn?.addEventListener('click', showModal);
+    modalCancel?.addEventListener('click', hideModal);
+    modal?.addEventListener('click', (e) => { if (e.target === modal) hideModal(); });
+
+    modalConfirm?.addEventListener('click', async () => {
+      if (!modalConfirm || !modalConfirmText || !modalSpinner) return;
+      modalConfirm.disabled = true;
+      modalSpinner.classList.remove('hidden');
+      modalConfirmText.textContent = lang === 'en' ? 'Converting...' : 'Convirtiendo...';
+
+      try {
+        await auth.switchToEnterprise();
+        window.location.href = `/${lang}/onboarding`;
+      } catch (err: any) {
+        console.error('Switch to enterprise error:', err);
+        if (modalError) {
+          modalError.textContent = err.message || (lang === 'en' ? 'Error converting account' : 'Error al convertir la cuenta');
+          modalError.classList.remove('hidden');
         }
-      });
-    }
+        modalConfirm.disabled = false;
+        modalSpinner.classList.add('hidden');
+        modalConfirmText.textContent = lang === 'en' ? 'Convert Account' : 'Convertir cuenta';
+      }
+    });
   }
 
   initProfile();
