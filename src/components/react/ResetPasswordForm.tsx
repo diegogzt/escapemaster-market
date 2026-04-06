@@ -17,6 +17,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ lang }) =>
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     // Extract email from URL query param
@@ -76,8 +77,8 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ lang }) =>
 
     try {
       await auth.resetPassword(email, code, newPassword);
-      alert('Contraseña restablecida con éxito. Ahora puedes iniciar sesión.');
-      window.location.href = `/${lang}/login`;
+      setSuccess(true);
+      setTimeout(() => { window.location.href = `/${lang}/login`; }, 2000);
     } catch (err: any) {
       setError(err.message || 'Error al restablecer contraseña');
     } finally {
@@ -183,7 +184,13 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ lang }) =>
             </div>
           )}
 
-          <Button type="submit" className="w-full mt-2" disabled={loading}>
+          {success && (
+            <div className="p-3 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg text-center">
+              {lang === 'en' ? 'Password reset successfully. Redirecting...' : 'Contraseña restablecida. Redirigiendo...'}
+            </div>
+          )}
+
+          <Button type="submit" className="w-full mt-2" disabled={loading || success}>
             {loading ? <Loader2 className="animate-spin" /> : 'Restablecer Contraseña'}
           </Button>
         </form>
