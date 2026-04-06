@@ -13,6 +13,8 @@ interface ManagerRoom {
   description?: string;
 }
 
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
+
 export function OnboardingEnterpriseWizard({ lang }: { lang: string }) {
   const t = useMemo(
     () => useTranslations((lang === "en" ? "en" : "es") as any),
@@ -66,7 +68,7 @@ export function OnboardingEnterpriseWizard({ lang }: { lang: string }) {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/enterprise/connect-manager", {
+      const res = await fetch(`${API_BASE}/enterprise/connect-manager`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -114,7 +116,7 @@ export function OnboardingEnterpriseWizard({ lang }: { lang: string }) {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/enterprise/import-rooms", {
+      const res = await fetch(`${API_BASE}/enterprise/import-rooms`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -150,7 +152,7 @@ export function OnboardingEnterpriseWizard({ lang }: { lang: string }) {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/enterprise/me/onboarding", {
+      const res = await fetch(`${API_BASE}/enterprise/me/onboarding`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -185,7 +187,7 @@ export function OnboardingEnterpriseWizard({ lang }: { lang: string }) {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/enterprise/me/onboarding", {
+      const res = await fetch(`${API_BASE}/enterprise/me/onboarding`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

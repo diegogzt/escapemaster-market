@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "../../i18n/ui";
 
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
+
 type Org = {
   id: string;
   name: string;
@@ -57,10 +59,10 @@ export function EnterpriseDashboard({ lang }: { lang: string }) {
         }
 
         const [orgRes, dashRes] = await Promise.all([
-          fetch("/api/enterprise/me", {
+          fetch(`${API_BASE}/enterprise/me`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch("/api/enterprise/dashboard", {
+          fetch(`${API_BASE}/enterprise/dashboard`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);

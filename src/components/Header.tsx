@@ -4,6 +4,8 @@ import { $user, $token } from "../lib/store";
 import { auth } from "../lib/auth";
 import { AuthStatus } from "./react/AuthStatus";
 import {
+
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
   Globe,
   Rocket,
   Menu,
@@ -102,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({
     if (!token) return;
     const fetchUnread = async () => {
       try {
-        const res = await fetch("/api/chat/unread", {
+        const res = await fetch(`${API_BASE}/chat/unread`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {

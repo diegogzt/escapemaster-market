@@ -35,6 +35,8 @@ import {
 } from "lucide-react";
 import { NotificationsPanel } from "./NotificationsPanel";
 
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
+
 interface Booking {
   id: string;
   room_name: string;
@@ -451,13 +453,13 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
         }
 
         const [meRes, historyRes, routesRes] = await Promise.all([
-          fetch("/api/players/me", {
+          fetch(`${API_BASE}/players/me`, {
             headers: { Authorization: `Bearer ${authToken}` },
           }),
-          fetch("/api/players/me/history", {
+          fetch(`${API_BASE}/players/me/history`, {
             headers: { Authorization: `Bearer ${authToken}` },
           }),
-          fetch("/api/routes/user", {
+          fetch(`${API_BASE}/routes/user`, {
             headers: { Authorization: `Bearer ${authToken}` },
           }).catch(() => null),
         ]);

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MessageCircle, Send, ArrowLeft, Users, User, Search, Plus, X, Loader2, Sparkles } from 'lucide-react';
 
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
+
 interface Conversation {
   id: string;
   type: 'direct' | 'squad';
@@ -76,7 +78,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ lang = 'es', initialConv
     if (!token) return;
 
     try {
-      const res = await fetch(`/api/chat/messages?conversation_id=${convId}`, {
+      const res = await fetch(`${API_BASE}/chat/messages?conversation_id=${convId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -99,7 +101,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ lang = 'es', initialConv
       setSearchingPlayersLoading(true);
       const token = getToken();
       try {
-        const res = await fetch(`/api/players/search?q=${encodeURIComponent(playerSearchQuery)}`, {
+        const res = await fetch(`${API_BASE}/players/search?q=${encodeURIComponent(playerSearchQuery)}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {

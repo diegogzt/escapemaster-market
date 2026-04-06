@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Users, User, Loader2, Check, ChevronDown } from 'lucide-react';
 
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
+
 interface StartRouteButtonProps {
     collectionId: string;
     lang?: string;
@@ -59,7 +61,7 @@ export const StartRouteButton: React.FC<StartRouteButtonProps> = ({ collectionId
         if (!token) return;
 
         try {
-            const res = await fetch(`/api/routes/start?collectionId=${collectionId}`, {
+            const res = await fetch(`${API_BASE}/routes/start?collectionId=${collectionId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();

@@ -2,6 +2,8 @@ import React, { useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Upload, X, Image as ImageIcon, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
+
 interface R2UploaderProps {
   bucket?: string;
   folder: string;
@@ -59,7 +61,7 @@ export function R2Uploader({
       const filename = `${timestamp}-${Math.random().toString(36).substring(2, 8)}.${extension}`;
       const key = `${folder}/${filename}`;
 
-      const presignRes = await fetch("/api/upload/presign", {
+      const presignRes = await fetch(`${API_BASE}/upload/presign`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key, contentType: file.type }),

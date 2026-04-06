@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { Button } from "../ui/Button";
 import {
+
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
   Calendar as CalendarIcon,
   Users,
   Clock,
@@ -176,7 +178,7 @@ export const BookingWidget: React.FC<BookingWidgetProps> = ({
       const token = localStorage.getItem("em_token");
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const res = await fetch(`/api/rooms/availability?roomId=${roomId}&date=${date}`, { headers });
+      const res = await fetch(`${API_BASE}/rooms/availability?roomId=${roomId}&date=${date}`, { headers });
       const data: AvailabilityResponse = await res.json();
       
       if (!res.ok) throw new Error(data.room?.name || "Error");

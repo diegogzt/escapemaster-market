@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { MapPin, Loader2 } from 'lucide-react';
 import { GameCard } from './GameCard';
 
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
+
 interface NearYouSectionProps {
     lang?: string;
 }
@@ -59,7 +61,7 @@ export const NearYouSection: React.FC<NearYouSectionProps> = ({ lang = 'es' }) =
                             setCity(userCity);
 
                             // Fetch nearby rooms
-                            const roomsRes = await fetch(`/api/rooms/nearby?city=${encodeURIComponent(userCity)}`);
+                            const roomsRes = await fetch(`${API_BASE}/rooms/nearby?city=${encodeURIComponent(userCity)}`);
                             const roomsData = await roomsRes.json();
                             
                             if (roomsData.rooms && roomsData.rooms.length > 0) {

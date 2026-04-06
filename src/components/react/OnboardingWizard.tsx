@@ -5,6 +5,8 @@ import { Input } from "../ui/Input";
 
 type Step = 1 | 2 | 3 | 4;
 
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
+
 export function OnboardingWizard({ lang }: { lang: string }) {
   const [step, setStep] = useState<Step>(1);
   const [loading, setLoading] = useState(false);
@@ -111,7 +113,7 @@ export function OnboardingWizard({ lang }: { lang: string }) {
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/players/me/onboarding", {
+      const res = await fetch(`${API_BASE}/players/me/onboarding`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({
@@ -372,7 +374,7 @@ function validateUsername(val: string) {
 async function uploadAvatar(file: File, token: string) {
   const formData = new FormData();
   formData.append("file", file);
-  const res = await fetch("/api/uploads/avatar", {
+  const res = await fetch(`${API_BASE}/uploads/avatar`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}` },
     body: formData
@@ -383,7 +385,7 @@ async function uploadAvatar(file: File, token: string) {
 }
 
 async function checkUsernameAvailable(username: string) {
-  const res = await fetch(`/api/auth/username-available?username=${username}`);
+  const res = await fetch(`${API_BASE}/auth/username-available?username=${username}`);
   if (!res.ok) return false;
   const data = await res.json();
   return data.available;
