@@ -227,7 +227,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Chat Link */}
             {isLoggedIn && (
               <a
-                href={`/${lang}/profile/notifications`}
+                href={`/${lang}/profile?tab=notifications`}
                 className="relative p-2 rounded-xl text-tropical-text/60 hover:text-tropical-primary hover:bg-tropical-primary/5 transition-all"
                 title={lang === "en" ? "Notifications" : "Notificaciones"}
               >
@@ -355,7 +355,7 @@ export const Header: React.FC<HeaderProps> = ({
               { name: t.routes, href: `/${lang}/routes`, icon: MapPin },
               {
                 name: lang === "en" ? "Notifications" : "Notificaciones",
-                href: `/${lang}/profile/notifications`,
+                href: `/${lang}/profile?tab=notifications`,
                 icon: Bell,
                 badge: unreadNotifications,
               },
@@ -518,7 +518,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="text-[10px] font-medium mt-0.5">Chat</span>
           </a>
           <a
-            href={`/${lang}/profile/notifications`}
+            href={`/${lang}/profile?tab=notifications`}
             className="relative flex flex-col items-center justify-center w-14 h-full text-gray-500 hover:text-tropical-primary"
           >
             <Bell className="w-5 h-5" />

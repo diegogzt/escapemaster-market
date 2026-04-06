@@ -13,6 +13,8 @@
   "dependencies": {
     "@astrojs/node": "^10.0.4",
     "@astrojs/react": "^5.0.2",
+    "@aws-sdk/client-s3": "^3.1024.0",
+    "@aws-sdk/s3-request-presigner": "^3.1024.0",
     "@diegogzt/ui-components": "github:diegogzt/escapemaster-ui-components#main",
     "@nanostores/react": "^1.0.0",
     "@radix-ui/react-avatar": "^1.1.11",

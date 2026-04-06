@@ -33,6 +33,7 @@ import {
   Award,
   Moon,
 } from "lucide-react";
+import { NotificationsPanel } from "./NotificationsPanel";
 
 interface Booking {
   id: string;
@@ -382,9 +383,19 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   const user = useStore($user);
   const token = useStore($token);
 
+  // Read initial tab from URL ?tab= param
+  const initialTab = (() => {
+    if (typeof window === 'undefined') return 'bookings';
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get('tab');
+    if (t === 'notifications' || t === 'routes' || t === 'achievements' || t === 'credits' || t === 'settings') return t;
+    return 'bookings';
+  })();
+
   const [activeTab, setActiveTab] = useState<
-    "bookings" | "routes" | "achievements" | "credits" | "settings"
-  >("bookings");
+    "bookings" | "routes" | "achievements" | "credits" | "settings" | "notifications"
+  >(initialTab as any);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [bookingFilter, setBookingFilter] = useState<
     "all" | "upcoming" | "completed" | "cancelled"
   >("all");
@@ -716,7 +727,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               <div className="text-gray-400 mb-1 flex justify-center">
                 {stat.icon}
               </div>
-              <div className="text-lg sm:text-2xl font-bold text-gray-900">
+              <div className="text-lg sm:text-xl font-bold text-tropical-primary">
                 {stat.value}
               </div>
               <div className="text-[9px] sm:text-xs text-gray-500 font-medium truncate">
@@ -755,6 +766,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
           onClick={() => setActiveTab("credits")}
           icon={<CreditCard size={16} className="sm:w-4.5 sm:h-4.5" />}
           label={labels.credits}
+        />
+        <TabButton
+          active={activeTab === "notifications"}
+          onClick={() => setActiveTab("notifications")}
+          icon={<Bell size={16} className="sm:w-4.5 sm:h-4.5" />}
+          label={lang === 'en' ? 'Notifications' : 'Avisos'}
         />
         <TabButton
           active={activeTab === "settings"}
@@ -956,6 +973,11 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
           </div>
         )}
 
+        {/* Notifications */}
+        {activeTab === "notifications" && (
+          <NotificationsPanel lang={lang} />
+        )}
+
         {/* Settings */}
         {activeTab === "settings" && (
           <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 divide-y divide-gray-100">
@@ -967,8 +989,8 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
               },
               {
                 icon: <Bell size={18} className="sm:w-5 sm:h-5" />,
-                label: "Notificaciones",
-                href: `/${lang}/profile/notifications`,
+                label: lang === 'en' ? 'Notifications' : 'Notificaciones',
+                href: `/${lang}/profile?tab=notifications`,
               },
               {
                 icon: <Shield size={18} className="sm:w-5 sm:h-5" />,
