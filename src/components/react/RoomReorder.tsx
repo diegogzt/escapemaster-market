@@ -1,6 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { ChevronUp, ChevronDown, GripVertical, Save, Check } from 'lucide-react';
 
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || 'http://localhost:8000/v1/api';
+
 interface ReorderRoom {
   id: string;
   name: string;
@@ -41,7 +43,7 @@ export const RoomReorder: React.FC<RoomReorderProps> = ({ rooms: initialRooms, c
         return;
       }
 
-      const res = await fetch('/api/routes/reorder', {
+      const res = await fetch(`/routes/reorder', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

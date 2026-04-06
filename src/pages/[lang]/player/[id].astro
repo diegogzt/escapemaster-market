@@ -252,7 +252,9 @@ const memberSince = player.member_since
   </main>
 </Layout>
 
+
 <script>
+  const API_BASE = import.meta.env.PUBLIC_API_URL || "http://localhost:8000/v1/api";
   // Handle "Send Message" button — create direct conversation and redirect to chat
   document.querySelectorAll('[data-send-message-to]').forEach(btn => {
     btn.addEventListener('click', async (e) => {
@@ -267,7 +269,7 @@ const memberSince = player.member_since
       }
 
       try {
-        const res = await fetch('/api/chat/conversations', {
+        const res = await fetch(`${API_BASE}/chat/conversations`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -229,6 +229,7 @@ const icons: Record<string, string> = {
 </Layout>
 
 <script>
+  const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
   import { auth } from '../../lib/auth';
 
   const rankThresholds = {
@@ -271,7 +272,7 @@ const icons: Record<string, string> = {
       // Load organization summary
       try {
         const token = localStorage.getItem('em_token');
-        const res = await fetch('/api/enterprise/me', {
+        const res = await fetch(`${API_BASE}/enterprise/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -317,7 +318,7 @@ const icons: Record<string, string> = {
     // Load player stats
     try {
       const token = localStorage.getItem('em_token');
-      const response = await fetch('/api/players/me', {
+      const response = await fetch(`${API_BASE}/players/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

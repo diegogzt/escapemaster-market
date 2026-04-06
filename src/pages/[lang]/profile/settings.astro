@@ -234,7 +234,9 @@ const t = lang === 'en' ? {
   }
 </style>
 
+
 <script>
+  const API_BASE = import.meta.env.PUBLIC_API_URL || "http://localhost:8000/v1/api";
   import { auth } from '../../../lib/auth';
 
   async function initSettings() {
@@ -252,7 +254,7 @@ const t = lang === 'en' ? {
 
     try {
       const token = localStorage.getItem('em_token');
-      const response = await fetch('/api/players/me/settings', {
+      const response = await fetch(`${API_BASE}/players/me/settings`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -281,7 +283,7 @@ const t = lang === 'en' ? {
 
       try {
         const token = localStorage.getItem('em_token');
-        await fetch('/api/players/me/settings', {
+        await fetch(`${API_BASE}/players/me/settings`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',

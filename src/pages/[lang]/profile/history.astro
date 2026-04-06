@@ -163,7 +163,9 @@ const t = lang === 'en' ? {
   </main>
 </Layout>
 
-<script define:vars={{ lang, t }}>
+
+<script>
+  const API_BASE = import.meta.env.PUBLIC_API_URL || "http://localhost:8000/v1/api";
   import { auth } from '../../../lib/auth';
 
   let allHistory: any[] = [];
@@ -182,10 +184,10 @@ const t = lang === 'en' ? {
     // Load both history and upcoming bookings in parallel
     try {
       const [historyRes, upcomingRes] = await Promise.all([
-        fetch('/api/players/me/history', {
+        fetch(`${API_BASE}/players/me/history`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch('/api/players/me/upcoming', {
+        fetch(`${API_BASE}/players/me/upcoming`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
@@ -305,7 +307,7 @@ const t = lang === 'en' ? {
               }
 
               try {
-                const response = await fetch('/api/marketplace', {
+                const response = await fetch(`${API_BASE}/marketplace`, {
                   method: 'POST',
                   headers: { 
                     'Content-Type': 'application/json',

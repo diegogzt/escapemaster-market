@@ -224,7 +224,9 @@ if (!listing) {
   </main>
 </Layout>
 
-<script define:vars={{ lang, listingId: id, sellerId: listing?.seller_id }}>
+
+<script>
+  const API_BASE = import.meta.env.PUBLIC_API_URL || "http://localhost:8000/v1/api";
   const buyBtn = document.getElementById('buyBtn');
   const contactBtn = document.getElementById('contactSellerBtn');
 
@@ -241,7 +243,7 @@ if (!listing) {
       buyBtn.textContent = lang === 'en' ? 'Processing...' : 'Procesando...';
       
       try {
-        const response = await fetch(`/api/marketplace/${listingId}`, {
+        const response = await fetch(`${API_BASE}/marketplace/${listingId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
         });
@@ -274,7 +276,7 @@ if (!listing) {
 
     try {
       // Create or get conversation with seller
-      const response = await fetch('/api/chat/conversations', {
+      const response = await fetch(`${API_BASE}/chat/conversations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

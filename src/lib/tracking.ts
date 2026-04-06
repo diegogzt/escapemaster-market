@@ -180,7 +180,8 @@ class Analytics {
     };
 
     try {
-      await fetch('/api/analytics/events', {
+      const apiBase = (import.meta.env.PUBLIC_API_URL as string) || 'http://localhost:8000/v1/api';
+      await fetch(`${apiBase}/analytics/events`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

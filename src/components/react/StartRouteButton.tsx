@@ -74,7 +74,7 @@ export const StartRouteButton: React.FC<StartRouteButtonProps> = ({ collectionId
         const token = getToken();
         if (!token) return;
         try {
-            const res = await fetch('/api/teams/my-teams', {
+            const res = await fetch(`/teams/my-teams', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -104,7 +104,7 @@ export const StartRouteButton: React.FC<StartRouteButtonProps> = ({ collectionId
         setError('');
 
         try {
-            const res = await fetch('/api/routes/start', {
+            const res = await fetch(`/routes/start', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

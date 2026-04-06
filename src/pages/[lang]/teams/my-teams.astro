@@ -36,7 +36,9 @@ const t = ui[lang as keyof typeof ui] || ui.es;
   </main>
 </Layout>
 
-<script define:vars={{ lang }}>
+
+<script>
+  const API_BASE = import.meta.env.PUBLIC_API_URL || "http://localhost:8000/v1/api";
   async function loadMyTeams() {
     const container = document.getElementById('my-teams-container');
     const token = localStorage.getItem('em_token');
@@ -52,7 +54,7 @@ const t = ui[lang as keyof typeof ui] || ui.es;
     }
 
     try {
-      const res = await fetch('/api/teams/my-teams', {
+      const res = await fetch(`${API_BASE}/teams/my-teams`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 

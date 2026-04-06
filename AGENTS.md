@@ -3,7 +3,38 @@
 ## Project Overview
 - **Stack**: Astro 5 SSR (`output: 'server'`) + React 19 + Tailwind CSS v4 + Nanostores + Leaflet
 - **Languages**: TypeScript throughout; i18n: `es` (default), `en`
-- **Repo**: `/frontend` - B2C marketplace for escape room discovery and booking
+- **Repo**: `github.com/diegogzt/escapemaster-market` - B2C marketplace for escape room discovery and booking
+- **Deploy**: Dokploy (git push)
+- **URL**: https://escapemaster.es
+
+---
+
+## Environment Variables
+
+```bash
+cp .env.example .env   # Copy environment template
+```
+
+### Required Variables
+
+```env
+# API — Backend URL (CRITICAL: set correct URL for production)
+PUBLIC_API_URL=http://localhost:8000/v1/api    # desarrollo local
+PUBLIC_API_URL=https://api.escapemaster.es/v1/api   # producción Dokploy
+
+# Database (SSR)
+DATABASE_URL=postgresql://...
+
+# Cloudflare R2 Storage
+R2_ACCOUNT_ID=e99ee5d6c8eee8f94c832951ced9f505
+R2_ACCESS_KEY_ID=...
+R2_SECRET_ACCESS_KEY=...
+R2_BUCKET_NAME=master
+R2_ENDPOINT=https://e99ee5d6c8eee8f94c832951ced9f505.eu.r2.cloudflarestorage.com
+R2_PUBLIC_BASE_URL=https://pub-d893856059e2460aa3f811b26da67ab2.r2.dev
+```
+
+> ⚠️ **En Dokploy**: configurar `PUBLIC_API_URL` con la URL de producción de la API.
 
 ---
 
@@ -18,27 +49,69 @@ npm run preview      # Preview production build
 npm run astro        # Run Astro CLI (astro --help)
 ```
 
-### Testing
-> **No test framework configured** — do not add tests without setting up a framework first.
-
-If adding tests in the future, use Vitest (Astro's recommended test runner).
-
-**For responsive testing, use Playwright:**
+### Environment
 ```bash
-# Install browser
-playwright install chromium
-
-# Run responsive tests (server must be running)
-python3 test_responsive.py
+npm run migrate      # Auto-migrate database
 ```
 
-### Environment Variables
-```bash
-cp .env.example .env   # Copy environment template
+---
+
+## Cloudflare R2 Storage
+
+El frontend usa R2 para uploads de imágenes de perfil de usuario.
+
+```typescript
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+const s3 = new S3Client({
+  region: "auto",
+  endpoint: import.meta.env.R2_ENDPOINT,
+  credentials: {
+    accessKeyId: import.meta.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: import.meta.env.R2_SECRET_ACCESS_KEY!,
+  },
+});
+
+// Generar URL firmada para upload directo desde el navegador
+const uploadUrl = await getSignedUrl(s3,
+  new PutObjectCommand({
+    Bucket: import.meta.env.R2_BUCKET_NAME,
+    Key: `usuarios/${userId}/avatar.jpg`,
+    ContentType: "image/jpeg",
+  }),
+  { expiresIn: 3600 }
+);
 ```
-Key vars:
-- `PUBLIC_API_URL` — Backend API URL (default: `http://localhost:8000`)
-- `DATABASE_URL` — PostgreSQL for SSR
+
+### Estructura de carpetas
+```
+master/
+├── escape-rooms/{id}/images/
+├── reservas/{año}/{mes}/
+├── usuarios/{user_id}/avatars/
+└── backups/{fecha}/
+```
+
+---
+
+## AWS SES Email
+
+El frontend tiene librerías de email (`src/lib/email.ts`, `src/lib/email-templates.ts`) para envío directo si es necesario en SSR.
+
+```typescript
+import { sendEmail } from "../lib/email";
+
+await sendEmail({
+  to: "user@example.com",
+  subject: "Asunto",
+  html: "<p>Contenido</p>",
+  from: "noreply@escapemaster.es",
+  replyTo: "support@escapemaster.es",
+});
+```
+
+**Templates disponibles**: verificación, reset password, confirmación reserva, recordatorio.
 
 ---
 
@@ -80,10 +153,11 @@ Key vars:
   ```
 - Tropical palette:
   - `tropical-primary` (#0097b2) — CTAs, headers
-  - `tropical-secondary` (#00849c) — darker contrast
+  - `tropical-secondary` (#4db8a8) — darker contrast
   - `tropical-accent` (#f39c12) — urgent CTAs, orange
-  - `tropical-bg` (#f8fafc) — page background
-  - `tropical-text` (#2d2d2d) — body text
+  - `tropical-bg` (#ffffff) — page background
+  - `tropical-text` (#0d3d34) — body text
+  - `tropical-card` (#e8f5f3) — card backgrounds
 - Use slash notation for opacity: `bg-tropical-primary/20`, `text-tropical-text/40`
 - Mobile-first: `text-sm sm:text-base` (not desktop-first)
 - Touch targets minimum 44px: `touch-manipulation` on interactive elements
@@ -98,22 +172,11 @@ Key vars:
 ### Page Layout Structure
 Follow this responsive padding pattern for all pages:
 ```astro
-<!-- Container with responsive padding -->
 <div class="max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-24">
-  
-  <!-- Responsive header section -->
   <div class="mb-10 sm:mb-16 text-center">
-    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-tropical-primary tracking-tight mb-3 sm:mb-4">
+    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black text-tropical-primary tracking-tight">
       Page Title
     </h1>
-    <p class="text-tropical-text/60 text-base sm:text-lg max-w-xl mx-auto">
-      Subtitle text
-    </p>
-  </div>
-  
-  <!-- Responsive grids -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-    <!-- Cards with responsive padding -->
   </div>
 </div>
 ```
@@ -127,6 +190,7 @@ Follow this responsive padding pattern for all pages:
 - Custom `ApiError` class with `status` property
 - Token from localStorage (`esc_token`) added as `Authorization: Bearer`
 - Handle 401 for auth redirects, 204 for empty responses
+- **API base**: `PUBLIC_API_URL` environment variable
 
 ### i18n
 - Translation keys in `src/i18n/ui.ts` under `ui.es` / `ui.en` objects
@@ -141,7 +205,7 @@ src/
 │   ├── ui/        # Reusable UI components (Button, Input, Card, Badge, Table)
 │   └── *.astro    # Astro components
 ├── layouts/       # Page layouts (Layout.astro, BareLayout.astro)
-├── lib/           # Utilities, API, auth, stores, DB
+├── lib/           # Utilities, API, auth, stores, DB, email
 ├── i18n/          # Translation strings
 ├── pages/         # Astro pages (file-based routing)
 │   └── [lang]/    # i18n route segments
@@ -164,7 +228,6 @@ src/
 ### DON'T
 - Hardcode colors or use generic Tailwind colors (`text-gray-700`, `bg-blue-500`)
 - Use `<=` 44px touch targets on mobile
-- Add test files without a configured test framework
 - Skip error handling in async operations
 - Use `any` without documented justification
 - Use oversized headings like `text-5xl` without responsive alternatives

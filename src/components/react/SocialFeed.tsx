@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Users, MapPin, Star, Zap, Clock } from 'lucide-react';
 
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || 'http://localhost:8000/v1/api';
+
 interface Activity {
   id: string;
   type: 'game_completed' | 'team_created' | 'route_started' | 'review_posted' | 'achievement';
@@ -22,7 +24,7 @@ export const SocialFeed: React.FC<SocialFeedProps> = ({ lang = 'es' }) => {
   useEffect(() => {
     const fetchFeed = async () => {
       try {
-        const res = await fetch('/api/social/feed');
+        const res = await fetch(`/social/feed');
         if (res.ok) {
           const data = await res.json();
           setActivities(data.activities || []);

@@ -82,7 +82,9 @@ const t = ui[lang as keyof typeof ui] || ui.es;
   </main>
 </Layout>
 
+
 <script>
+  const API_BASE = import.meta.env.PUBLIC_API_URL || "http://localhost:8000/v1/api";
   const form = document.getElementById('create-team-form') as HTMLFormElement;
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -107,7 +109,7 @@ const t = ui[lang as keyof typeof ui] || ui.es;
     };
 
     try {
-      const res = await fetch('/api/teams', {
+      const res = await fetch(`${API_BASE}/teams`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(data)

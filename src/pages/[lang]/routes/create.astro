@@ -153,7 +153,9 @@ try {
   </main>
 </Layout>
 
+
 <script>
+  const API_BASE = import.meta.env.PUBLIC_API_URL || "http://localhost:8000/v1/api";
   const selectedRoomIds: string[] = [];
   const selectedRoomsEl = document.getElementById('selected-rooms')!;
   const selectedCountEl = document.getElementById('selected-count')!;
@@ -255,7 +257,7 @@ try {
     };
 
     try {
-      const res = await fetch('/api/routes/user', {
+      const res = await fetch(`${API_BASE}/routes/user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(data),

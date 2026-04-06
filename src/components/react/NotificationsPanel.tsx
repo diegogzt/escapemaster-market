@@ -3,6 +3,8 @@ import { Bell, Trophy, Star, Zap, CalendarCheck, CalendarX, Clock, Gift } from '
 import { $token } from '../../lib/store';
 import { cn } from '../../lib/utils';
 
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || 'http://localhost:8000/v1/api';
+
 // Tipos de las notificaciones
 interface Notification {
   id: string;
@@ -92,7 +94,7 @@ export function NotificationsPanel({ lang }: { lang: "es" | "en" }) {
       const token = $token.get() || localStorage.getItem('em_token');
       if (!token) return;
 
-      const res = await fetch('/api/players/me/notifications', {
+      const res = await fetch(`/players/me/notifications', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -114,7 +116,7 @@ export function NotificationsPanel({ lang }: { lang: "es" | "en" }) {
       const token = $token.get() || localStorage.getItem('em_token');
       if (!token) return;
 
-      await fetch('/api/players/me/notifications/read', {
+      await fetch(`/players/me/notifications/read', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });

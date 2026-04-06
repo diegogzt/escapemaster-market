@@ -235,7 +235,9 @@ const t = lang === 'en' ? {
   </main>
 </Layout>
 
-<script define:vars={{ lang, id, t }}>
+
+<script>
+  const API_BASE = import.meta.env.PUBLIC_API_URL || "http://localhost:8000/v1/api";
   import { auth } from '../../../lib/auth';
 
   let bookingId = id;
@@ -252,7 +254,7 @@ const t = lang === 'en' ? {
     try {
       const token = localStorage.getItem('em_token');
       // Load booking details
-      const response = await fetch(`/api/bookings/${bookingId}`, {
+      const response = await fetch(`${API_BASE}/bookings/${bookingId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -398,7 +400,7 @@ const t = lang === 'en' ? {
 
       try {
         const token = localStorage.getItem('em_token');
-        const response = await fetch('/api/reviews', {
+        const response = await fetch(`${API_BASE}/reviews`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
