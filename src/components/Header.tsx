@@ -125,7 +125,7 @@ export const Header: React.FC<HeaderProps> = ({
     const fetchUnreadNotifications = async () => {
       try {
         const res = await fetch(
-          "/api/players/me/notifications?count_only=true",
+          `${API_BASE}/players/me/notifications?count_only=true`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
