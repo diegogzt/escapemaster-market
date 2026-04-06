@@ -1,0 +1,111 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { query } from '../../lib/db';
+
+const { lang = 'es' } = Astro.params;
+
+let content = '';
+try {
+    const { rows } = await query('SELECT value FROM platform_settings WHERE key = $1', ['cookies_policy_content']);
+    content = rows[0]?.value || '';
+} catch (_) {}
+
+const titles = {
+    es: 'Política de Cookies',
+    en: 'Cookie Policy'
+};
+
+const title = titles[lang as keyof typeof titles] || titles.es;
+---
+
+<Layout title={title}>
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 pb-12 sm:pb-16 lg:pb-24">
+        <!-- Header Section -->
+        <div class="mb-10 sm:mb-16">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-tropical-primary/10 text-tropical-primary text-xs font-bold uppercase tracking-widest mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+                Legal
+            </div>
+            <h1 class="text-xl sm:text-2xl font-bold text-tropical-primary tracking-tight mb-3 sm:mb-4">{title}</h1>
+            <p class="text-tropical-text/50 text-sm sm:text-base flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                {lang === 'en' ? 'Last updated:' : 'Última actualización:'} {new Date().toLocaleDateString(lang)}
+            </p>
+        </div>
+
+        <!-- Content Section -->
+        <div class="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 shadow-sm border border-tropical-secondary/10 mb-8 sm:mb-12">
+            {content ? (
+                <article class="prose prose-sm max-w-none">
+                    <div class="whitespace-pre-wrap text-tropical-text/80 leading-relaxed text-sm sm:text-base space-y-4">
+                        {content.split('\n\n').map((paragraph: string) => (
+                            <p class="text-tropical-text/80">{paragraph}</p>
+                        ))}
+                    </div>
+                </article>
+            ) : (
+                <div class="space-y-6 text-tropical-text/80 text-sm sm:text-base leading-relaxed">
+                    <section>
+                        <h2 class="text-lg font-bold text-tropical-text mb-2">{lang === 'en' ? 'What are cookies?' : '¿Qué son las cookies?'}</h2>
+                        <p>{lang === 'en'
+                            ? 'Cookies are small text files stored on your device when you visit a website. They help us improve your experience on EscapeMaster.'
+                            : 'Las cookies son pequeños archivos de texto almacenados en tu dispositivo cuando visitas un sitio web. Nos ayudan a mejorar tu experiencia en EscapeMaster.'
+                        }</p>
+                    </section>
+
+                    <section>
+                        <h2 class="text-lg font-bold text-tropical-text mb-2">{lang === 'en' ? 'Cookies we use' : 'Cookies que utilizamos'}</h2>
+                        <div class="space-y-3">
+                            {[
+                                {
+                                    type: lang === 'en' ? 'Essential cookies' : 'Cookies esenciales',
+                                    desc: lang === 'en' ? 'Necessary for the website to function. Cannot be disabled.' : 'Necesarias para el funcionamiento del sitio. No se pueden desactivar.'
+                                },
+                                {
+                                    type: lang === 'en' ? 'Analytics cookies' : 'Cookies analíticas',
+                                    desc: lang === 'en' ? 'Help us understand how visitors use EscapeMaster.' : 'Nos ayudan a entender cómo los visitantes utilizan EscapeMaster.'
+                                },
+                                {
+                                    type: lang === 'en' ? 'Functional cookies' : 'Cookies funcionales',
+                                    desc: lang === 'en' ? 'Remember your preferences and settings.' : 'Recuerdan tus preferencias y configuraciones.'
+                                }
+                            ].map(({ type, desc }) => (
+                                <div class="p-4 rounded-xl bg-tropical-bg border border-tropical-secondary/10">
+                                    <p class="font-semibold text-tropical-text mb-1">{type}</p>
+                                    <p class="text-tropical-text/60 text-sm">{desc}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    <section>
+                        <h2 class="text-lg font-bold text-tropical-text mb-2">{lang === 'en' ? 'Cookie control' : 'Control de cookies'}</h2>
+                        <p>{lang === 'en'
+                            ? 'You can control and delete cookies through your browser settings. Note that disabling cookies may affect site functionality.'
+                            : 'Puedes controlar y eliminar cookies a través de la configuración de tu navegador. Ten en cuenta que deshabilitar las cookies puede afectar la funcionalidad del sitio.'
+                        }</p>
+                    </section>
+                </div>
+            )}
+        </div>
+
+        <!-- Contact CTA -->
+        <div class="p-6 sm:p-8 rounded-2xl bg-gradient-to-r from-tropical-primary/5 to-tropical-secondary/5 border border-tropical-primary/20">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-tropical-primary/10 flex items-center justify-center shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-tropical-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-tropical-text mb-1">{lang === 'en' ? 'Questions about cookies?' : '¿Preguntas sobre cookies?'}</h3>
+                    <p class="text-tropical-text/60 text-sm">{lang === 'en' ? 'Contact our team for more information.' : 'Contacta con nuestro equipo para más información.'}</p>
+                </div>
+                <a
+                    href={`/${lang}/contacto`}
+                    class="inline-flex items-center justify-center h-11 px-6 rounded-xl bg-tropical-primary text-white font-bold hover:bg-tropical-primary/90 transition-colors shadow-lg shadow-tropical-primary/20 touch-manipulation"
+                >
+                    {lang === 'en' ? 'Contact Us' : 'Contactar'}
+                </a>
+            </div>
+        </div>
+    </div>
+</Layout>

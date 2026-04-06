@@ -66,7 +66,7 @@ if (!listing) {
     <div class="max-w-5xl mx-auto px-4 sm:px-6 pt-4">
       <a 
         href={`/${lang}/marketplace`}
-        class="inline-flex items-center gap-2 text-gray-600 hover:text-tropical-primary transition-colors"
+        class="inline-flex items-center gap-2 text-tropical-text/70 hover:text-tropical-primary transition-colors"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="m15 18-6-6 6-6"/>
@@ -103,35 +103,35 @@ if (!listing) {
                 <h1 class="text-2xl font-bold text-tropical-primary mb-1">
                   {listing.room_name}
                 </h1>
-                <p class="text-gray-600">{listing.organization_name}</p>
+                <p class="text-tropical-text/70">{listing.organization_name}</p>
               </div>
             </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-              <div class="bg-gray-50 rounded-xl p-3 text-center">
+              <div class="bg-tropical-bg rounded-xl p-3 text-center">
                 <div class="text-lg font-bold text-tropical-primary">
                   {new Date(listing.start_time).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                 </div>
-                <div class="text-xs text-gray-500">{lang === 'en' ? 'Date' : 'Fecha'}</div>
+                <div class="text-xs text-tropical-text/50">{lang === 'en' ? 'Date' : 'Fecha'}</div>
               </div>
-              <div class="bg-gray-50 rounded-xl p-3 text-center">
+              <div class="bg-tropical-bg rounded-xl p-3 text-center">
                 <div class="text-lg font-bold text-tropical-primary">
                   {new Date(listing.start_time).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                 </div>
-                <div class="text-xs text-gray-500">{lang === 'en' ? 'Time' : 'Hora'}</div>
+                <div class="text-xs text-tropical-text/50">{lang === 'en' ? 'Time' : 'Hora'}</div>
               </div>
-              <div class="bg-gray-50 rounded-xl p-3 text-center">
+              <div class="bg-tropical-bg rounded-xl p-3 text-center">
                 <div class="text-lg font-bold text-tropical-primary">{listing.duration_minutes}</div>
-                <div class="text-xs text-gray-500">{lang === 'en' ? 'Minutes' : 'Minutos'}</div>
+                <div class="text-xs text-tropical-text/50">{lang === 'en' ? 'Minutes' : 'Minutos'}</div>
               </div>
-              <div class="bg-gray-50 rounded-xl p-3 text-center">
+              <div class="bg-tropical-bg rounded-xl p-3 text-center">
                 <div class="text-lg font-bold text-tropical-primary">{listing.num_people}</div>
-                <div class="text-xs text-gray-500">{lang === 'en' ? 'Players' : 'Jugadores'}</div>
+                <div class="text-xs text-tropical-text/50">{lang === 'en' ? 'Players' : 'Jugadores'}</div>
               </div>
             </div>
 
             <!-- Location -->
-            <div class="flex items-center gap-2 text-gray-600 mb-4">
+            <div class="flex items-center gap-2 text-tropical-text/70 mb-4">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
               </svg>
@@ -144,7 +144,7 @@ if (!listing) {
                 <h3 class="font-bold text-tropical-primary mb-2">
                   {lang === 'en' ? 'Description' : 'Descripción'}
                 </h3>
-                <p class="text-gray-600">{listing.description}</p>
+                <p class="text-tropical-text/70">{listing.description}</p>
               </div>
             )}
           </div>
@@ -155,7 +155,7 @@ if (!listing) {
           <div class="bg-white rounded-2xl p-6 shadow-lg sticky top-4">
             <!-- Price -->
             <div class="text-center mb-6">
-              <div class="text-sm text-gray-500 mb-1">
+              <div class="text-sm text-tropical-text/50 mb-1">
                 {lang === 'en' ? 'Ticket Price' : 'Precio de la entrada'}
               </div>
               <div class="text-4xl font-bold text-tropical-primary">
@@ -163,7 +163,7 @@ if (!listing) {
               </div>
               {listing.price < listing.original_price && (
                 <div class="flex items-center justify-center gap-2 mt-2">
-                  <span class="text-sm text-gray-400 line-through">
+                  <span class="text-sm text-tropical-text/40 line-through">
                     {listing.original_price.toFixed(2)}€
                   </span>
                   <span class="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
@@ -174,7 +174,7 @@ if (!listing) {
             </div>
 
             <!-- Seller Info -->
-            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl mb-6">
+            <div class="flex items-center gap-3 p-3 bg-tropical-bg rounded-xl mb-6">
               <div class="w-10 h-10 rounded-full bg-tropical-primary/20 flex items-center justify-center text-tropical-primary font-bold">
                 {listing.seller_name_display?.charAt(0) || 'U'}
               </div>
@@ -182,7 +182,7 @@ if (!listing) {
                 <div class="text-sm font-medium text-tropical-primary">
                   {listing.seller_name_display}
                 </div>
-                <div class="text-xs text-gray-500">
+                <div class="text-xs text-tropical-text/50">
                   {lang === 'en' ? 'Seller' : 'Vendedor'}
                 </div>
               </div>
@@ -199,7 +199,7 @@ if (!listing) {
             </div>
 
             <!-- Expiry -->
-            <div class="text-center text-sm text-gray-500 mb-4">
+            <div class="text-center text-sm text-tropical-text/50 mb-4">
               {lang === 'en' ? 'Expires on' : 'Expira el'} {new Date(listing.expires_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
             </div>
 
@@ -211,7 +211,7 @@ if (!listing) {
               {lang === 'en' ? 'Buy Now' : 'Comprar Ahora'}
             </button>
 
-            <p class="text-center text-xs text-gray-500 mt-4">
+            <p class="text-center text-xs text-tropical-text/50 mt-4">
               {lang === 'en' 
                 ? 'Secure payment via Stripe. The ticket will be transferred to your account after purchase.'
                 : 'Pago seguro con Stripe. La entrada se transferirá a tu cuenta después de la compra.'
