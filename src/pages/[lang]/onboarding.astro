@@ -6,7 +6,7 @@ const { lang = "es" } = Astro.params;
 ---
 
 <Layout title={lang === "en" ? "Onboarding | EscapeMaster" : "Onboarding | EscapeMaster"}>
-  <main class="min-h-svh bg-tropical-bg flex items-stretch justify-stretch">
+  <main class="min-h-svh pt-16 sm:pt-20 bg-tropical-bg flex items-stretch justify-stretch">
     <div class="w-full">
       <OnboardingFlow client:load lang={lang} />
     </div>
