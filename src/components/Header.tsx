@@ -4,8 +4,6 @@ import { $user, $token } from "../lib/store";
 import { auth } from "../lib/auth";
 import { AuthStatus } from "./react/AuthStatus";
 import {
-
-const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
   Globe,
   Rocket,
   Menu,
@@ -20,6 +18,8 @@ const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost
   MessageCircle,
   Bell,
 } from "lucide-react";
+
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
 
 interface HeaderProps {
   lang?: string;

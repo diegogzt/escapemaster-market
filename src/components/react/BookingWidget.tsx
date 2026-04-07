@@ -1,8 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { Button } from "../ui/Button";
 import {
-
-const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
   Calendar as CalendarIcon,
   Users,
   Clock,
@@ -20,6 +18,8 @@ const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost
   AlertCircle,
   MapPin,
 } from "lucide-react";
+
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
 
 interface BookingWidgetProps {
   roomId: string;

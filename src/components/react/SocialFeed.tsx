@@ -24,7 +24,7 @@ export const SocialFeed: React.FC<SocialFeedProps> = ({ lang = 'es' }) => {
   useEffect(() => {
     const fetchFeed = async () => {
       try {
-        const res = await fetch(`/social/feed');
+        const res = await fetch(`${API_BASE}/social/feed`);
         if (res.ok) {
           const data = await res.json();
           setActivities(data.activities || []);

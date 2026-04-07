@@ -43,7 +43,7 @@ export const RoomReorder: React.FC<RoomReorderProps> = ({ rooms: initialRooms, c
         return;
       }
 
-      const res = await fetch(`/routes/reorder', {
+      const res = await fetch(`${API_BASE}/routes/reorder`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

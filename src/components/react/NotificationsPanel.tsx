@@ -94,7 +94,7 @@ export function NotificationsPanel({ lang }: { lang: "es" | "en" }) {
       const token = $token.get() || localStorage.getItem('em_token');
       if (!token) return;
 
-      const res = await fetch(`/players/me/notifications', {
+      const res = await fetch(`${API_BASE}/players/me/notifications`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
@@ -116,7 +116,7 @@ export function NotificationsPanel({ lang }: { lang: "es" | "en" }) {
       const token = $token.get() || localStorage.getItem('em_token');
       if (!token) return;
 
-      await fetch(`/players/me/notifications/read', {
+      await fetch(`${API_BASE}/players/me/notifications/read`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });

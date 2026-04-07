@@ -61,7 +61,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ lang = 'es', initialConv
     if (!token) return;
 
     try {
-      const res = await fetch(`/chat/conversations', {
+      const res = await fetch(`${API_BASE}/chat/conversations`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -121,7 +121,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ lang = 'es', initialConv
   const startDirectChat = async (targetUserId: string) => {
     const token = getToken();
     try {
-      const res = await fetch(`/chat/conversations', {
+      const res = await fetch(`${API_BASE}/chat/conversations`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -192,7 +192,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({ lang = 'es', initialConv
     const token = getToken();
 
     try {
-      const res = await fetch(`/chat/messages', {
+      const res = await fetch(`${API_BASE}/chat/messages`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
