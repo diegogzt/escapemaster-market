@@ -10,7 +10,9 @@ ENV PUBLIC_GOOGLE_CLIENT_ID=1057719615515-mf1blrrtj0k2su2vo633nlf6q34khp7n.apps.
 ENV PUBLIC_API_URL=https://api.escapemaster.es/v1/api
 ENV PUBLIC_CMS_API_URL=https://master.escapemaster.es
 
-# Clone fresh from GitHub — bypasses Dokploy's stale build context
+# Bust Docker layer cache when main branch changes — ADD with HTTPS is never cached
+ADD https://api.github.com/repos/diegogzt/escapemaster-market/git/refs/heads/main /tmp/cachebust.json
+
 RUN apk add --no-cache git && \
     git clone --depth=1 --branch main https://github.com/diegogzt/escapemaster-market.git . && \
     npm install
