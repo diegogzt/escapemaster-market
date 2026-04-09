@@ -7,96 +7,267 @@ const t = ui[lang as keyof typeof ui] || ui.es;
 ---
 
 <Layout title={`${t['teams.my_teams']} | EscapeMaster`}>
-  <main class="pb-32 sm:pb-16">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6">
-      
-      <a href={`/${lang}/teams`} class="inline-flex items-center gap-2 text-sm font-semibold text-tropical-text/50 hover:text-tropical-primary mb-6 transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-        Volver a Equipos
-      </a>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:wght@400;500;600;700&display=swap');
 
-      <div class="flex items-center justify-between mb-8">
-        <h1 class="text-2xl sm:text-3xl font-black text-tropical-text">{t['teams.my_teams']}</h1>
-        <a 
+    .font-display { font-family: 'Bricolage Grotesque', system-ui, sans-serif; }
+    .font-body { font-family: 'DM Sans', system-ui, sans-serif; }
+
+    @keyframes slide-up-delay {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes scale-in {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-6px) rotate(3deg); }
+    }
+
+    .animate-slide-up { animation: slide-up-delay 0.5s ease-out forwards; opacity: 0; }
+    .animate-scale-in { animation: scale-in 0.4s ease-out forwards; opacity: 0; }
+    .animate-shimmer {
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      background-size: 200% 100%;
+      animation: shimmer 2s infinite;
+    }
+    .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+    .animate-float { animation: float 6s ease-in-out infinite; }
+
+    .team-card { animation: slide-up-delay 0.5s ease-out forwards; opacity: 0; }
+    .team-card:nth-child(1) { animation-delay: 0.05s; }
+    .team-card:nth-child(2) { animation-delay: 0.1s; }
+    .team-card:nth-child(3) { animation-delay: 0.15s; }
+    .team-card:nth-child(4) { animation-delay: 0.2s; }
+    .team-card:nth-child(5) { animation-delay: 0.25s; }
+    .team-card:nth-child(6) { animation-delay: 0.3s; }
+
+    .team-card-inner {
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .team-card:hover .team-card-inner {
+      transform: translateY(-4px) scale(1.01);
+      box-shadow: 0 16px 32px -8px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,151,178,0.1);
+    }
+    .team-card:hover .team-avatar {
+      transform: scale(1.1);
+    }
+    .team-avatar {
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .action-btn {
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px -4px rgba(0,151,178,0.3);
+    }
+  </style>
+
+  <main class="pb-32 sm:pb-20 font-body">
+    <!-- Hero Section -->
+    <div class="relative overflow-hidden bg-gradient-to-br from-[#0d3d34] via-[#0a5c52] to-tropical-primary min-[480px]:min-h-[180px] sm:min-h-[220px]">
+      <!-- Decorative orbs -->
+      <div class="absolute inset-0 pointer-events-none overflow-hidden">
+        <div class="absolute w-32 h-32 bg-tropical-primary/20 top-[-40px] left-[10%] rounded-full blur-3xl animate-float"></div>
+        <div class="absolute w-24 h-24 bg-tropical-secondary/15 bottom-[20px] right-[15%] rounded-full blur-2xl"></div>
+      </div>
+
+      <div class="relative max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+        <a href={`/${lang}/teams`} class="inline-flex items-center gap-1.5 text-white/60 text-xs font-bold uppercase tracking-wider hover:text-white transition-colors mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+          {lang === 'es' ? 'Volver a Equipos' : 'Back to Teams'}
+        </a>
+
+        <h1 class="animate-slide-up font-display text-3xl sm:text-4xl font-extrabold text-white leading-tight tracking-tight mb-2">
+          {t['teams.my_teams']}
+        </h1>
+        <p class="animate-slide-up text-white/55 text-sm sm:text-base" style="animation-delay: 0.1s">
+          {lang === 'es' ? 'Gestiona tus equipos, invita amigos y estadísticas' : 'Manage your teams, invite friends and stats'}
+        </p>
+      </div>
+    </div>
+
+    <!-- Actions Bar -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 py-5">
+      <div class="flex items-center justify-between">
+        <div>
+          <span id="team-count" class="text-xs font-bold text-tropical-text/40 uppercase tracking-wider">
+            {lang === 'es' ? 'Cargando...' : 'Loading...'}
+          </span>
+        </div>
+        <a
           href={`/${lang}/teams/create`}
-          class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-tropical-primary text-white text-sm font-semibold hover:bg-tropical-primary/90 transition-colors shadow-lg shadow-tropical-primary/20"
+          class="action-btn flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-tropical-primary to-tropical-secondary text-white text-sm font-extrabold shadow-lg shadow-tropical-primary/20"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14m-7-7h14"/></svg>
           {t['teams.create']}
         </a>
       </div>
+    </div>
 
-      <div id="my-teams-container">
-        <div class="text-center py-16">
-          <div class="w-8 h-8 border-2 border-tropical-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p class="text-sm text-tropical-text/50">Cargando tus equipos...</p>
+    <!-- Teams Container -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6">
+      <div id="my-teams-container" class="space-y-4">
+        <!-- Loading State -->
+        <div class="flex items-center justify-center py-16">
+          <div class="text-center">
+            <div class="w-10 h-10 border-3 border-tropical-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-sm text-tropical-text/50">{lang === 'es' ? 'Cargando tus equipos...' : 'Loading your teams...'}</p>
+          </div>
         </div>
       </div>
     </div>
   </main>
-</Layout>
 
+  <script>
+    const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
 
-<script>
-  const API_BASE = import.meta.env.PUBLIC_API_URL || "http://localhost:8000/v1/api";
-  async function loadMyTeams() {
-    const container = document.getElementById('my-teams-container');
-    const token = localStorage.getItem('em_token');
-    
-    if (!token) {
-      container.innerHTML = `
-        <div class="text-center py-16 bg-white rounded-2xl border border-gray-100">
-          <p class="text-tropical-text/60 mb-4">Inicia sesión para ver tus equipos</p>
-          <a href="/${lang}/login" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-tropical-primary text-white font-semibold hover:bg-tropical-primary/90 transition-colors">Iniciar Sesión</a>
-        </div>
-      `;
-      return;
-    }
+    async function loadMyTeams() {
+      const container = document.getElementById('my-teams-container');
+      const countEl = document.getElementById('team-count');
+      const lang = window.location.pathname.split('/')[1] || 'es';
+      const labels = {
+        es: {
+          members: 'miembros',
+          games: 'partidas',
+          role_leader: 'Líder',
+          role_member: 'Miembro',
+          no_teams: 'No tienes equipos aún',
+          no_teams_desc: 'Crea un equipo o únete a uno existente',
+          create_team: 'Crear Equipo',
+          login_required: 'Inicia sesión para ver tus equipos',
+          login: 'Iniciar Sesión',
+          error: 'Error al cargar equipos'
+        },
+        en: {
+          members: 'members',
+          games: 'games',
+          role_leader: 'Leader',
+          role_member: 'Member',
+          no_teams: "You don't have teams yet",
+          no_teams_desc: 'Create a team or join an existing one',
+          create_team: 'Create Team',
+          login_required: 'Log in to see your teams',
+          login: 'Log In',
+          error: 'Error loading teams'
+        }
+      };
+      const t = labels[lang as keyof typeof labels] || labels.es;
 
-    try {
-      const res = await fetch(`${API_BASE}/teams/my-teams`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const token = localStorage.getItem('em_token');
 
-      if (!res.ok) throw new Error('Error');
-      const teams = await res.json();
-
-      if (teams.length === 0) {
+      if (!token) {
         container.innerHTML = `
-          <div class="text-center py-16 bg-white rounded-2xl border border-gray-100">
-            <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-tropical-primary/10 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-tropical-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <div class="text-center py-16 animate-scale-in">
+            <div class="w-20 h-20 rounded-3xl bg-tropical-card mx-auto mb-5 flex items-center justify-center border border-gray-100">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-tropical-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
-            <h3 class="text-lg font-bold text-tropical-text mb-2">No tienes equipos aún</h3>
-            <p class="text-tropical-text/50 mb-6">Crea un equipo o únete a uno existente</p>
-            <a href="/${lang}/teams/create" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-tropical-primary text-white font-semibold hover:bg-tropical-primary/90 transition-colors shadow-lg shadow-tropical-primary/20">Crear Equipo</a>
+            <h3 class="font-display text-xl font-extrabold text-tropical-text mb-2">${t.login_required}</h3>
+            <a href="/${lang}/login" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-tropical-primary to-tropical-secondary text-white font-bold text-sm shadow-lg shadow-tropical-primary/20">
+              ${t.login}
+            </a>
           </div>
         `;
+        if (countEl) countEl.textContent = '';
         return;
       }
 
-      container.innerHTML = `
-        <div class="space-y-4">
-          ${teams.map(team => `
-            <a href="/${lang}/teams/${team.id}" class="block bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-lg hover:border-tropical-primary/20 transition-all">
-              <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-tropical-primary flex items-center justify-center text-white font-bold text-lg shrink-0">
-                  ${team.name.substring(0, 2).toUpperCase()}
-                </div>
-                <div class="flex-1 min-w-0">
-                  <h3 class="font-bold text-tropical-text">${team.name}</h3>
-                  <p class="text-xs text-tropical-text/40">${team.member_count || 0} miembros · ${team.total_games || 0} partidas · ${team.role || 'member'}</p>
-                </div>
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-              </div>
-            </a>
-          `).join('')}
-        </div>
-      `;
-    } catch {
-      container.innerHTML = `<p class="text-center py-8 text-red-500">Error al cargar equipos</p>`;
-    }
-  }
+      try {
+        const res = await fetch(`${API_BASE}/teams/my-teams`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-  loadMyTeams();
-</script>
+        if (!res.ok) throw new Error('Error');
+        const teams = await res.json();
+
+        if (countEl) countEl.textContent = `${teams.length} ${teams.length === 1 ? (lang === 'es' ? 'equipo' : 'team') : (lang === 'es' ? 'equipos' : 'teams')}`;
+
+        if (teams.length === 0) {
+          container.innerHTML = `
+            <div class="text-center py-16 animate-scale-in">
+              <div class="relative inline-block mb-5">
+                <div class="w-20 h-20 rounded-3xl bg-tropical-card flex items-center justify-center mx-auto border border-gray-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-tropical-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div class="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-tropical-accent/20 animate-pulse-glow"></div>
+              </div>
+              <h3 class="font-display text-xl font-extrabold text-tropical-text mb-2">${t.no_teams}</h3>
+              <p class="text-tropical-text/50 text-sm mb-5">${t.no_teams_desc}</p>
+              <a href="/${lang}/teams/create" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-tropical-primary to-tropical-secondary text-white font-bold text-sm shadow-lg shadow-tropical-primary/20">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14m-7-7h14"/></svg>
+                ${t.create_team}
+              </a>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = `
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            ${teams.map((team: any, i: number) => `
+              <a href="/${lang}/teams/${team.id}" class="team-card group block" style="animation-delay: ${i * 0.08}s">
+                <div class="team-card-inner relative bg-white rounded-3xl border border-gray-100 p-5">
+                  <!-- Top accent -->
+                  <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-tropical-primary to-tropical-secondary rounded-t-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                  <div class="flex items-start gap-4">
+                    ${team.avatar_url ? (
+                      `<img src="${team.avatar_url}" alt="${team.name}" class="team-avatar w-14 h-14 rounded-2xl object-cover shadow-md border-2 border-white" />`
+                    ) : (
+                      `<div class="team-avatar w-14 h-14 rounded-2xl bg-gradient-to-br from-tropical-primary to-tropical-secondary flex items-center justify-center text-white text-lg font-black shadow-md border-2 border-white">
+                        ${team.name.substring(0, 2).toUpperCase()}
+                      </div>`
+                    )}
+                    <div class="flex-1 min-w-0">
+                      <h3 class="font-display font-extrabold text-lg text-tropical-text group-hover:text-tropical-primary transition-colors truncate">${team.name}</h3>
+                      <p class="text-xs text-tropical-text/40 font-medium truncate">${team.motto || ''}</p>
+                    </div>
+                    <span class="shrink-0 text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 rounded-lg ${team.role === 'leader' ? 'bg-tropical-primary/10 text-tropical-primary' : 'bg-gray-100 text-gray-500'}">
+                      ${team.role === 'leader' ? t.role_leader : t.role_member}
+                    </span>
+                  </div>
+
+                  <div class="flex items-center gap-4 mt-4 pt-3 border-t border-gray-50">
+                    <span class="flex items-center gap-1.5 text-xs font-bold text-tropical-text/50">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-tropical-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                      ${team.member_count || 0} ${t.members}
+                    </span>
+                    <span class="flex items-center gap-1.5 text-xs font-bold text-tropical-text/50">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                      ${team.total_games || 0} ${t.games}
+                    </span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-300 ml-auto group-hover:text-tropical-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+                  </div>
+                </div>
+              </a>
+            `).join('')}
+          </div>
+        `;
+      } catch {
+        container.innerHTML = `
+          <div class="text-center py-16">
+            <div class="w-16 h-16 rounded-2xl bg-red-50 mx-auto mb-4 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <p class="text-tropical-text/60 font-medium">${t.error}</p>
+          </div>
+        `;
+        if (countEl) countEl.textContent = '';
+      }
+    }
+
+    loadMyTeams();
+  </script>
+</Layout>

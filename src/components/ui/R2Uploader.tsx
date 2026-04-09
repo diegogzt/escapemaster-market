@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "../../lib/utils";
 import { Upload, X, Image as ImageIcon, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 
 const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
