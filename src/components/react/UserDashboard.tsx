@@ -384,19 +384,23 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
 }) => {
   const user = useStore($user);
   const token = useStore($token);
+  const [mounted, setMounted] = useState(false);
 
-  // Read initial tab from URL ?tab= param
-  const initialTab = (() => {
-    if (typeof window === 'undefined') return 'bookings';
+  // Read initial tab from URL ?tab= param - must be done in useEffect to avoid SSR mismatch
+  const [initialTab, setInitialTab] = useState<'bookings' | 'routes' | 'achievements' | 'credits' | 'settings' | 'notifications'>('bookings');
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const t = params.get('tab');
-    if (t === 'notifications' || t === 'routes' || t === 'achievements' || t === 'credits' || t === 'settings') return t;
-    return 'bookings';
-  })();
+    if (t === 'notifications' || t === 'routes' || t === 'achievements' || t === 'credits' || t === 'settings') {
+      setInitialTab(t as any);
+    }
+    setMounted(true);
+  }, []);
 
   const [activeTab, setActiveTab] = useState<
     "bookings" | "routes" | "achievements" | "credits" | "settings" | "notifications"
-  >(initialTab as any);
+  >(initialTab);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [bookingFilter, setBookingFilter] = useState<
     "all" | "upcoming" | "completed" | "cancelled"
@@ -590,21 +594,16 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({
   if (!user && !token) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto text-4xl">
-            🔒
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            Acceso restringido
-          </h2>
-          <p className="text-gray-500">Inicia sesión para ver tu panel</p>
-          <a
-            href={`/${lang}/login`}
-            className="inline-block px-6 py-3 bg-tropical-primary text-white font-bold rounded-xl"
-          >
-            Iniciar Sesión
-          </a>
-        </div>
+        <div className="animate-spin w-8 h-8 border-4 border-tropical-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  // Show loading while checking mounted state to avoid hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-tropical-primary border-t-transparent rounded-full" />
       </div>
     );
   }

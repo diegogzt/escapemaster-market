@@ -43,12 +43,15 @@ export function EnterpriseDashboard({ lang }: { lang: string }) {
     [lang],
   );
 
+  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [org, setOrg] = useState<Org>(null);
   const [dash, setDash] = useState<DashboardData | null>(null);
 
   useEffect(() => {
+    setMounted(true);
+
     (async () => {
       try {
         const token = localStorage.getItem("em_token");
@@ -85,6 +88,23 @@ export function EnterpriseDashboard({ lang }: { lang: string }) {
       }
     })();
   }, [t]);
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <div className="mt-6 rounded-2xl border border-tropical-secondary/15 bg-white p-6">
+        <div className="h-5 w-40 rounded bg-tropical-card animate-pulse" />
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-24 rounded-2xl border border-tropical-secondary/10 bg-tropical-card animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
