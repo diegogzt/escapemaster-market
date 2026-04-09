@@ -6,14 +6,13 @@ import { ui } from '../../../i18n/ui';
 const { lang = 'es' } = Astro.params;
 const t = ui[lang as keyof typeof ui] || ui.es;
 
-// Get search params
 const url = new URL(Astro.request.url);
 const search = url.searchParams.get('q') || '';
 
 let squads: any[] = [];
 try {
   let query = `
-    SELECT s.*, 
+    SELECT s.*,
       COUNT(sm.id) as member_count,
       (SELECT name FROM players WHERE id = s.leader_id) as leader_name
     FROM squads s
@@ -21,14 +20,14 @@ try {
     WHERE s.is_public = true
   `;
   const params: any[] = [];
-  
+
   if (search) {
     params.push(`%${search}%`);
     query += ` AND (s.name ILIKE $${params.length} OR s.description ILIKE $${params.length})`;
   }
-  
+
   query += ` GROUP BY s.id ORDER BY s.total_games DESC, s.created_at DESC LIMIT 50`;
-  
+
   const result = await pool.query(query, params);
   squads = result.rows;
 } catch (e) {
@@ -37,111 +36,329 @@ try {
 ---
 
 <Layout title={`${t['teams.title']} | EscapeMaster`}>
-  <main class="pb-32 sm:pb-16">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6">
-      
-      <!-- Header -->
-      <div class="text-center mb-10">
-        <h1 class="text-3xl sm:text-4xl font-black text-tropical-text mb-3">{t['teams.title']}</h1>
-        <p class="text-tropical-text/60 max-w-xl mx-auto">{t['teams.subtitle']}</p>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+    .font-display { font-family: 'Bricolage Grotesque', system-ui, sans-serif; }
+    .font-body { font-family: 'DM Sans', system-ui, sans-serif; }
+
+    @keyframes slide-up-delay {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slide-in-left {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes scale-in {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-8px) rotate(4deg); }
+    }
+    @keyframes border-draw {
+      from { stroke-dashoffset: 1000; }
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes bounce-in {
+      0% { transform: scale(0.3); opacity: 0; }
+      50% { transform: scale(1.05); }
+      70% { transform: scale(0.9); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .animate-slide-up { animation: slide-up-delay 0.55s ease-out forwards; opacity: 0; }
+    .animate-slide-in-left { animation: slide-in-left 0.5s ease-out forwards; opacity: 0; }
+    .animate-scale-in { animation: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; opacity: 0; }
+    .animate-float { animation: float 6s ease-in-out infinite; }
+    .animate-shimmer {
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      background-size: 200% 100%;
+      animation: shimmer 2.5s infinite;
+    }
+    .animate-spin-slow { animation: spin-slow 20s linear infinite; }
+    .animate-bounce-in { animation: bounce-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; opacity: 0; }
+
+    .squad-card { animation: slide-up-delay 0.5s ease-out forwards; opacity: 0; }
+    .squad-card:nth-child(1) { animation-delay: 0.05s; }
+    .squad-card:nth-child(2) { animation-delay: 0.1s; }
+    .squad-card:nth-child(3) { animation-delay: 0.15s; }
+    .squad-card:nth-child(4) { animation-delay: 0.2s; }
+    .squad-card:nth-child(5) { animation-delay: 0.25s; }
+    .squad-card:nth-child(6) { animation-delay: 0.3s; }
+    .squad-card:nth-child(7) { animation-delay: 0.35s; }
+    .squad-card:nth-child(8) { animation-delay: 0.4s; }
+    .squad-card:nth-child(9) { animation-delay: 0.45s; }
+
+    .search-input:focus {
+      box-shadow: 0 0 0 3px rgba(0,151,178,0.15), 0 4px 20px rgba(0,0,0,0.06);
+      border-color: transparent;
+    }
+
+    .action-btn {
+      transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .action-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px -4px rgba(0,0,0,0.15);
+    }
+    .action-btn:active {
+      transform: translateY(-1px) scale(0.98);
+    }
+
+    .squad-card-inner {
+      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .squad-card:hover .squad-card-inner {
+      transform: translateY(-6px) scale(1.01);
+      box-shadow: 0 24px 48px -12px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,151,178,0.1);
+    }
+    .squad-card:hover .squad-avatar {
+      transform: scale(1.08);
+    }
+    .squad-card:hover .squad-title {
+      color: #0097b2;
+    }
+    .squad-avatar {
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .privacy-badge {
+      font-size: 9px;
+      letter-spacing: 0.08em;
+    }
+
+    .stat-pill {
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-pill::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .stat-pill:hover::after { opacity: 1; }
+
+    .hero-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(40px);
+      pointer-events: none;
+    }
+  </style>
+
+  <main class="pb-32 sm:pb-20 font-body">
+
+    <!-- ─── Hero Section ─── -->
+    <div class="relative overflow-hidden bg-gradient-to-br from-[#0d3d34] via-[#0a5c52] to-[#0097b2] min-[480px]:min-h-[340px] sm:min-h-[400px]">
+      <!-- Animated background orbs -->
+      <div class="absolute inset-0 pointer-events-none overflow-hidden">
+        <div class="hero-orb animate-float w-64 h-64 bg-tropical-primary/30 top-[-80px] left-[-40px]"></div>
+        <div class="hero-orb w-48 h-48 bg-tropical-secondary/25 top-[60px] right-[10%] animate-spin-slow" style="animation-direction: reverse;"></div>
+        <div class="hero-orb animate-float w-32 h-32 bg-tropical-accent/20 bottom-[20px] right-[30%]"></div>
+        <!-- Dot grid pattern -->
+        <div class="absolute inset-0 opacity-[0.06]" style="background-image: radial-gradient(circle, rgba(255,255,255,0.8) 1px, transparent 1px); background-size: 28px 28px;"></div>
       </div>
 
-      <!-- Actions Bar -->
-      <div class="flex flex-col sm:flex-row gap-4 mb-8">
-        <!-- Search -->
-        <form method="GET" class="flex-1">
-          <div class="relative">
-            <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input 
-              type="text" 
-              name="q" 
-              value={search}
-              placeholder={t['teams.search'] + '...'}
-              class="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-tropical-primary focus:ring-2 focus:ring-tropical-primary/20 outline-none transition-all text-sm"
-            />
+      <!-- Decorative SVG lock icon -->
+      <div class="absolute right-4 sm:right-12 top-1/2 -translate-y-1/2 opacity-[0.06] animate-float">
+        <svg width="200" height="200" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+          <path d="M19 11H5C3.89543 11 3 11.8954 3 13V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V13C21 11.8954 20.1046 11 19 11ZM12 17C10.8954 17 10 16.1046 10 15C10 13.8954 10.8954 13 12 13C13.1046 13 14 13.8954 14 15C14 16.1046 13.1046 17 12 17ZM17.31 11H6.69C5.20817 11 4.59737 9.80081 5.55071 8.75569L6.81029 7.37752C7.261 6.88234 7.49264 6.21837 7.45 5.54C8.19324 5.10918 9.1888 5 10.22 5H13.78C14.8112 5 15.8068 5.10918 16.55 5.54C16.5074 6.21837 16.739 6.88234 17.1897 7.37752L18.4493 8.75569C19.4026 9.80081 18.7918 11 17.31 11Z"/>
+        </svg>
+      </div>
+
+      <div class="relative max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16 w-full flex items-center min-[480px]:min-h-[340px] sm:min-h-[400px]">
+        <div class="max-w-2xl">
+
+          <!-- Eyebrow pill -->
+          <div class="animate-slide-in-left inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm text-white/80 text-xs font-extrabold uppercase tracking-[0.25em] px-4 py-2 rounded-full mb-6 border border-white/15">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-tropical-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>{lang === 'es' ? 'Liga de Equipos' : 'Teams League'}</span>
           </div>
-        </form>
-        
-        <!-- Action Buttons -->
-        <div class="flex gap-3">
-          <a 
-            href={`/${lang}/teams/my-teams`}
-            class="flex items-center gap-2 px-5 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-tropical-text hover:bg-gray-50 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            {t['teams.my_teams']}
-          </a>
-          <a 
-            href={`/${lang}/teams/create`}
-            class="flex items-center gap-2 px-5 py-3 rounded-xl bg-tropical-primary text-white text-sm font-semibold hover:bg-tropical-primary/90 transition-colors shadow-lg shadow-tropical-primary/20"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
-            {t['teams.create']}
-          </a>
+
+          <h1 class="animate-slide-up font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-[0.92] tracking-tight mb-4" style="animation-delay: 0.1s">
+            {t['teams.title']}
+          </h1>
+          <p class="animate-slide-up text-white/65 text-base sm:text-lg leading-relaxed max-w-lg" style="animation-delay: 0.2s">
+            {t['teams.subtitle']}
+          </p>
+
+          <!-- Stats bar -->
+          <div class="animate-slide-up flex flex-wrap gap-4 mt-8" style="animation-delay: 0.3s">
+            <div class="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-2xl px-4 py-2.5 border border-white/10">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-tropical-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              <span class="text-white font-bold text-sm">{squads.length} {lang === 'es' ? 'equipos' : 'teams'}</span>
+            </div>
+            {squads.filter(s => Number(s.win_rate) > 0).length > 0 && (
+              <div class="flex items-center gap-2 bg-tropical-accent/20 backdrop-blur-sm rounded-2xl px-4 py-2.5 border border-tropical-accent/20">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-tropical-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span class="text-white font-bold text-sm">{lang === 'es' ? 'Récord activo' : 'Active win streak'}</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+    </div>
 
-      <!-- Teams Grid -->
+    <!-- ─── Search & Actions Bar ─── -->
+    <div class="sticky top-16 sm:top-20 z-30 bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-sm">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4">
+        <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+          <!-- Search -->
+          <form method="GET" class="flex-1 relative group">
+            <div class="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-focus-within:text-tropical-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            </div>
+            <input
+              type="text"
+              name="q"
+              value={search}
+              placeholder={t['teams.search'] + '...'}
+              class="search-input w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-gray-100 bg-gray-50/50 focus:bg-white outline-none transition-all text-sm font-medium placeholder:text-gray-300"
+            />
+          </form>
+
+          <!-- Action buttons -->
+          <div class="flex gap-3 shrink-0">
+            <a
+              href={`/${lang}/teams/my-teams`}
+              class="action-btn flex items-center gap-2 px-5 py-3.5 rounded-2xl border-2 border-gray-200 text-sm font-bold text-tropical-text hover:border-tropical-secondary/30 hover:bg-tropical-card bg-white"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              {t['teams.my_teams']}
+            </a>
+            <a
+              href={`/${lang}/teams/create`}
+              class="action-btn flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-tropical-primary to-tropical-secondary text-white text-sm font-extrabold shadow-lg shadow-tropical-primary/20 hover:shadow-xl hover:shadow-tropical-primary/30"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14m-7-7h14"/></svg>
+              {t['teams.create']}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Teams Grid ─── -->
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 mt-8 sm:mt-10">
       {squads.length > 0 ? (
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {squads.map((squad: any) => (
-            <a href={`/${lang}/teams/${squad.id}`} class="group bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-xl hover:border-tropical-primary/20 transition-all duration-300">
-              <div class="flex items-start gap-4 mb-4">
-                {squad.avatar_url ? (
-                  <img src={squad.avatar_url} alt={squad.name} class="w-14 h-14 rounded-xl object-cover" />
-                ) : (
-                  <div class="w-14 h-14 rounded-xl bg-tropical-primary flex items-center justify-center text-white text-xl font-bold">
-                    {squad.name.substring(0, 2).toUpperCase()}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          {squads.map((squad: any, i: number) => (
+            <a href={`/${lang}/teams/${squad.id}`} class="squad-card group block" style={`animation-delay: ${i * 0.07}s`}>
+              <div class="squad-card-inner relative bg-white rounded-3xl border border-gray-100 p-5 sm:p-6 h-full flex flex-col">
+
+                <!-- Top accent line -->
+                <div class="absolute top-0 left-6 right-6 h-1 bg-gradient-to-r from-tropical-primary via-tropical-secondary to-tropical-accent rounded-b-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                <!-- Header: avatar + info -->
+                <div class="flex items-start gap-4 mb-4">
+                  <div class="relative shrink-0">
+                    {squad.avatar_url ? (
+                      <img src={squad.avatar_url} alt={squad.name} class="squad-avatar w-16 h-16 rounded-2xl object-cover shadow-md border-2 border-white" />
+                    ) : (
+                      <div class="squad-avatar w-16 h-16 rounded-2xl bg-gradient-to-br from-tropical-primary to-tropical-secondary flex items-center justify-center text-white text-xl font-black shadow-md border-2 border-white">
+                        {squad.name.substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                    {/* Online/activity dot */}
+                    <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
                   </div>
-                )}
-                <div class="flex-1 min-w-0">
-                  <h3 class="font-bold text-tropical-text text-lg group-hover:text-tropical-primary transition-colors truncate">{squad.name}</h3>
-                  {squad.motto && <p class="text-sm text-tropical-text/50 italic truncate">"{squad.motto}"</p>}
+
+                  <div class="flex-1 min-w-0 pt-1">
+                    <div class="flex items-start justify-between gap-2">
+                      <h3 class="squad-title font-display font-extrabold text-base sm:text-lg text-tropical-text leading-tight truncate transition-colors">{squad.name}</h3>
+                      <span class={`privacy-badge shrink-0 font-extrabold uppercase tracking-wider px-2 py-1 rounded-lg ${squad.is_public ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-100'}`}>
+                        {squad.is_public ? (lang === 'es' ? 'Público' : 'Public') : (lang === 'es' ? 'Privado' : 'Private')}
+                      </span>
+                    </div>
+                    {squad.motto && (
+                      <p class="text-xs text-tropical-text/40 italic mt-0.5 line-clamp-1">"{squad.motto}"</p>
+                    )}
+                    {squad.leader_name && (
+                      <p class="text-[11px] text-tropical-text/35 mt-1 font-medium truncate">
+                        👑 {squad.leader_name}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <span class={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full ${squad.is_public ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                  {squad.is_public ? t['teams.public'] : t['teams.private']}
-                </span>
-              </div>
-              
-              {squad.description && (
-                <p class="text-sm text-tropical-text/60 mb-4 line-clamp-2">{squad.description}</p>
-              )}
-              
-              <div class="flex items-center gap-4 text-xs font-semibold text-tropical-text/40">
-                <span class="flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                  {squad.member_count} {t['teams.members']}
-                </span>
-                <span class="flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                  {squad.total_games} {t['teams.games_played']}
-                </span>
-                {squad.win_rate > 0 && (
-                  <span class="flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 10 7 10"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 10 17 10"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-                    {squad.win_rate}% {t['teams.win_rate']}
-                  </span>
+
+                {/* Description */}
+                {squad.description && (
+                  <p class="text-sm text-tropical-text/55 mb-4 line-clamp-2 leading-relaxed flex-1">{squad.description}</p>
                 )}
+
+                {/* Stats row */}
+                <div class="flex items-center gap-2 flex-wrap mb-4">
+                  <span class="stat-pill flex items-center gap-1.5 bg-tropical-card px-3 py-1.5 rounded-xl text-xs font-bold text-tropical-text border border-gray-100 hover:bg-tropical-primary/5 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-tropical-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    {squad.member_count} {t['teams.members']}
+                  </span>
+                  <span class="stat-pill flex items-center gap-1.5 bg-amber-50 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-600 border border-amber-100 hover:bg-amber-100/50 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                    {squad.total_games} {lang === 'es' ? 'partidas' : 'games'}
+                  </span>
+                  {squad.win_rate > 0 && (
+                    <span class="stat-pill flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-600 border border-emerald-100 hover:bg-emerald-100/50 transition-colors">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 10 7 10"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 10 17 10"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                      {squad.win_rate}% {lang === 'es' ? 'victorias' : 'wins'}
+                    </span>
+                  )}
+                </div>
+
+                {/* CTA footer -->
+                <div class="flex items-center justify-between pt-3 border-t border-gray-50">
+                  <span class="text-[10px] font-bold text-tropical-text/30 uppercase tracking-wider">
+                    {lang === 'es' ? 'Ver perfil →' : 'View profile →'}
+                  </span>
+                  <div class="flex -space-x-2">
+                    {/* Placeholder avatars for team members */}
+                    <div class="w-6 h-6 rounded-full bg-gray-200 border-2 border-white"></div>
+                    <div class="w-6 h-6 rounded-full bg-gray-200 border-2 border-white"></div>
+                    <div class="w-6 h-6 rounded-full bg-tropical-primary/20 border-2 border-white flex items-center justify-center text-[8px] font-extrabold text-tropical-primary">
+                      +{Math.max(0, Number(squad.member_count) - 2)}
+                    </div>
+                  </div>
+                </div>
               </div>
             </a>
           ))}
         </div>
       ) : (
-        <div class="text-center py-20">
-          <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-tropical-primary/10 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-tropical-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <!-- Empty state -->
+        <div class="text-center py-24">
+          <div class="relative inline-block mb-6">
+            <div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-tropical-card to-tropical-primary/5 flex items-center justify-center mx-auto shadow-xl border border-gray-100">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-tropical-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="absolute -top-2 -right-2 w-8 h-8 rounded-xl bg-tropical-secondary/20 border-2 border-white animate-bounce-in" style="animation-delay: 0.4s"></div>
           </div>
-          <h3 class="text-xl font-bold text-tropical-text mb-2">{t['teams.no_teams']}</h3>
-          <p class="text-tropical-text/50 mb-6">Crea tu equipo y empieza a jugar con amigos</p>
-          <a 
-            href={`/${lang}/teams/create`}
-            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-tropical-primary text-white font-semibold hover:bg-tropical-primary/90 transition-colors shadow-lg shadow-tropical-primary/20"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-7-7h14"/></svg>
-            {t['teams.create']}
-          </a>
+          <h3 class="font-display text-2xl font-extrabold text-tropical-text mb-2">{t['teams.no_teams']}</h3>
+          <p class="text-tropical-text/50 mb-6 max-w-sm mx-auto">{lang === 'es' ? 'Crea tu equipo y empieza a jugar con amigos de toda España' : 'Create your team and start playing with friends across Spain'}</p>
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <a href={`/${lang}/teams/create`} class="inline-flex items-center gap-2 bg-gradient-to-r from-tropical-primary to-tropical-secondary text-white font-extrabold px-6 py-3 rounded-2xl hover:opacity-90 transition-opacity shadow-lg shadow-tropical-primary/20">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14m-7-7h14"/></svg>
+              {t['teams.create']}
+            </a>
+            <a href={`/${lang}/teams/my-teams`} class="inline-flex items-center gap-2 bg-white border-2 border-gray-200 text-tropical-text font-bold px-6 py-3 rounded-2xl hover:border-tropical-primary/30 hover:bg-tropical-card transition-all">
+              {t['teams.my_teams']}
+            </a>
+          </div>
         </div>
       )}
     </div>
+    <div class="h-16"></div>
   </main>
 </Layout>
