@@ -187,6 +187,8 @@ export function EnterpriseDashboard({ lang }: { lang: string }) {
 
       setErdSuccess(`${data.imported || roomsToImport.length} salas importadas`);
       setShowErdImport(false);
+      // Reload dashboard data to reflect new room count
+      window.location.reload();
     } catch (e: any) {
       setErdError(e?.message || "Error importando salas");
     } finally {
