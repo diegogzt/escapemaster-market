@@ -37,6 +37,12 @@ type DashboardData = {
   }>;
 };
 
+interface ErdRoom {
+  id: string;
+  name: string;
+  erd_game_id?: number;
+}
+
 export function EnterpriseDashboard({ lang }: { lang: string }) {
   const t = useMemo(
     () => useTranslations((lang === "en" ? "en" : "es") as any),
@@ -48,6 +54,16 @@ export function EnterpriseDashboard({ lang }: { lang: string }) {
   const [error, setError] = useState<string | null>(null);
   const [org, setOrg] = useState<Org>(null);
   const [dash, setDash] = useState<DashboardData | null>(null);
+
+  // ERD import state
+  const [showErdImport, setShowErdImport] = useState(false);
+  const [erdEmail, setErdEmail] = useState("");
+  const [erdPassword, setErdPassword] = useState("");
+  const [erdRooms, setErdRooms] = useState<ErdRoom[]>([]);
+  const [selectedErdRoomIds, setSelectedErdRoomIds] = useState<Set<string>>(new Set());
+  const [importingEr, setImportingEr] = useState(false);
+  const [erdError, setErdError] = useState<string | null>(null);
+  const [erdSuccess, setErdSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -88,6 +104,92 @@ export function EnterpriseDashboard({ lang }: { lang: string }) {
       }
     })();
   }, [t]);
+
+  // Connect to ERD Panel and fetch rooms
+  async function handleConnectErd(e: React.FormEvent) {
+    e.preventDefault();
+    setErdError(null);
+    setErdSuccess(null);
+    setErdRooms([]);
+    setImportingEr(true);
+
+    try {
+      const token = localStorage.getItem("em_token");
+      if (!token) {
+        setErdError(t("enterprise.dashboard.error"));
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/enterprise/connect-erd`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email: erdEmail, password: erdPassword }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Error conectando con ERD Panel");
+      }
+
+      const rooms = data.rooms || [];
+      setErdRooms(rooms);
+      const allIds = new Set<string>(rooms.map((r: ErdRoom) => r.id));
+      setSelectedErdRoomIds(allIds);
+    } catch (e: any) {
+      setErdError(e?.message || "Error conectando con ERD Panel");
+    } finally {
+      setImportingEr(false);
+    }
+  }
+
+  function toggleErdRoom(roomId: string) {
+    setSelectedErdRoomIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(roomId)) next.delete(roomId);
+      else next.add(roomId);
+      return next;
+    });
+  }
+
+  async function handleImportErdRooms() {
+    setErdError(null);
+    setErdSuccess(null);
+
+    try {
+      const token = localStorage.getItem("em_token");
+      if (!token) {
+        setErdError(t("enterprise.dashboard.error"));
+        return;
+      }
+
+      setImportingEr(true);
+      const roomsToImport = erdRooms.filter((r) => selectedErdRoomIds.has(r.id));
+
+      const res = await fetch(`${API_BASE}/enterprise/import-erd-rooms`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ erdRooms: roomsToImport }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Error importando salas");
+      }
+
+      setErdSuccess(`${data.imported || roomsToImport.length} salas importadas`);
+      setShowErdImport(false);
+    } catch (e: any) {
+      setErdError(e?.message || "Error importando salas");
+    } finally {
+      setImportingEr(false);
+    }
+  }
 
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
@@ -259,7 +361,93 @@ export function EnterpriseDashboard({ lang }: { lang: string }) {
           >
             {t("enterprise.dashboard.open_manager")}
           </a>
+
+          <button
+            type="button"
+            onClick={() => setShowErdImport(!showErdImport)}
+            className="inline-flex items-center justify-center h-11 px-5 rounded-xl bg-tropical-secondary text-white font-bold touch-manipulation"
+          >
+            {lang === "en" ? "Import from ERD" : "Importar de ERD"}
+          </button>
         </div>
+
+        {showErdImport && (
+          <div className="mt-4 rounded-2xl border border-tropical-secondary/20 bg-tropical-bg p-4">
+            <form onSubmit={handleConnectErd} className="space-y-3">
+              <div className="text-sm font-black text-tropical-text mb-2">
+                {lang === "en" ? "Connect to ERD Panel" : "Conectar a ERD Panel"}
+              </div>
+              <input
+                type="email"
+                value={erdEmail}
+                onChange={(e) => setErdEmail(e.target.value)}
+                placeholder="email@erdpanel.com"
+                className="w-full h-11 px-4 rounded-xl border border-tropical-secondary/20 bg-white text-tropical-text"
+                required
+              />
+              <input
+                type="password"
+                value={erdPassword}
+                onChange={(e) => setErdPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full h-11 px-4 rounded-xl border border-tropical-secondary/20 bg-white text-tropical-text"
+                required
+              />
+              {erdError && (
+                <div className="text-sm text-tropical-accent">{erdError}</div>
+              )}
+              {erdSuccess && (
+                <div className="text-sm text-tropical-secondary">{erdSuccess}</div>
+              )}
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={importingEr || erdRooms.length > 0}
+                  className="h-11 px-5 rounded-xl bg-tropical-primary text-white font-bold disabled:opacity-50"
+                >
+                  {importingEr
+                    ? "..."
+                    : lang === "en"
+                    ? "Connect"
+                    : "Conectar"}
+                </button>
+                {erdRooms.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleImportErdRooms}
+                    disabled={importingEr || selectedErdRoomIds.size === 0}
+                    className="h-11 px-5 rounded-xl bg-tropical-accent text-white font-bold disabled:opacity-50"
+                  >
+                    {importingEr
+                      ? "..."
+                      : lang === "en"
+                      ? `Import ${selectedErdRoomIds.size} rooms`
+                      : `Importar ${selectedErdRoomIds.size} salas`}
+                  </button>
+                )}
+              </div>
+            </form>
+
+            {erdRooms.length > 0 && (
+              <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
+                {erdRooms.map((room) => (
+                  <label
+                    key={room.id}
+                    className="flex items-center gap-2 rounded-xl border border-tropical-secondary/15 bg-white p-2 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded"
+                      checked={selectedErdRoomIds.has(room.id)}
+                      onChange={() => toggleErdRoom(room.id)}
+                    />
+                    <span className="text-sm text-tropical-text">{room.name}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {cards.map((c) => (
