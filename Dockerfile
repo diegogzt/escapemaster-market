@@ -20,6 +20,7 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 COPY docker-pre-start.sh /usr/local/bin/docker-pre-start.sh
+RUN chmod +x /usr/local/bin/docker-pre-start.sh
 
 EXPOSE 4321
 ENTRYPOINT ["/usr/local/bin/docker-pre-start.sh"]
