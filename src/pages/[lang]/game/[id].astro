@@ -51,7 +51,7 @@ try {
                 SELECT rev.*, p.display_name as player_name, p.avatar_url 
                 FROM reviews rev
                 LEFT JOIN players p ON p.id = rev.player_id
-                WHERE rev.room_id = $1 AND rev.is_public = true
+                WHERE rev.room_id = $1
                 ORDER BY rev.created_at DESC
                 LIMIT 5
             `, [id]);
