@@ -41,6 +41,9 @@ interface ErdRoom {
   id: string;
   name: string;
   erd_game_id?: number;
+  price?: string | null;
+  schedule?: string | null;
+  raw_data?: string[];
 }
 
 export function EnterpriseDashboard({ lang }: { lang: string }) {
@@ -429,21 +432,53 @@ export function EnterpriseDashboard({ lang }: { lang: string }) {
             </form>
 
             {erdRooms.length > 0 && (
-              <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
+              <div className="mt-4 space-y-2 max-h-80 overflow-y-auto">
+                <div className="text-xs font-black uppercase tracking-widest text-tropical-text/50 mb-2">
+                  {lang === "en" ? "Available rooms (select all to import)" : "Salas disponibles (selecciona las que quieras importar)"}
+                </div>
                 {erdRooms.map((room) => (
                   <label
                     key={room.id}
-                    className="flex items-center gap-2 rounded-xl border border-tropical-secondary/15 bg-white p-2 cursor-pointer"
+                    className={`flex items-start gap-3 rounded-xl border bg-white p-3 cursor-pointer transition-all ${
+                      selectedErdRoomIds.has(room.id)
+                        ? "border-tropical-secondary/40 shadow-sm"
+                        : "border-tropical-secondary/15 hover:border-tropical-secondary/30"
+                    }`}
                   >
                     <input
                       type="checkbox"
-                      className="w-4 h-4 rounded"
+                      className="w-4 h-4 rounded mt-0.5"
                       checked={selectedErdRoomIds.has(room.id)}
                       onChange={() => toggleErdRoom(room.id)}
                     />
-                    <span className="text-sm text-tropical-text">{room.name}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-sm font-bold text-tropical-text">{room.name}</span>
+                        <span className="text-[10px] font-mono text-tropical-text/40 shrink-0">#{room.erd_game_id || room.id}</span>
+                      </div>
+                      <div className="mt-1 grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-0.5">
+                        {room.price && (
+                          <span className="text-xs text-tropical-text/60">
+                            <span className="font-semibold">{lang === "en" ? "Price" : "Precio"}:</span> {room.price}
+                          </span>
+                        )}
+                        {room.schedule && (
+                          <span className="text-xs text-tropical-text/60">
+                            <span className="font-semibold">{lang === "en" ? "Schedule" : "Horario"}:</span> {room.schedule}
+                          </span>
+                        )}
+                        {room.raw_data && room.raw_data.length > 0 && (
+                          <span className="text-xs text-tropical-text/40 col-span-2">
+                            {room.raw_data.slice(1, 4).join(" · ")}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </label>
                 ))}
+                <div className="text-xs text-tropical-text/40 text-center pt-1">
+                  {selectedErdRoomIds.size}/{erdRooms.length} {lang === "en" ? "selected" : "seleccionadas"}
+                </div>
               </div>
             )}
           </div>
