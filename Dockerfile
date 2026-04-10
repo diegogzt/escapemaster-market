@@ -5,10 +5,8 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
-# Public env vars needed at build time (Astro inlines them)
-ENV PUBLIC_GOOGLE_CLIENT_ID=1057719615515-mf1blrrtj0k2su2vo633nlf6q34khp7n.apps.googleusercontent.com
-ENV PUBLIC_API_URL=https://api.escapemaster.es/v1/api
-ENV PUBLIC_CMS_API_URL=https://master.escapemaster.es
+# Install fuser for port management
+RUN apk add --no-cache fuser psmisc
 
 # Clone fresh from GitHub — bypasses Dokploy's stale build context
 RUN apk add --no-cache git && \
@@ -21,5 +19,8 @@ RUN npm run build
 # Remove dev deps after build
 RUN npm prune --omit=dev
 
+COPY docker-pre-start.sh /usr/local/bin/docker-pre-start.sh
+
 EXPOSE 4321
+ENTRYPOINT ["/usr/local/bin/docker-pre-start.sh"]
 CMD ["node", "./dist/server/entry.mjs"]
