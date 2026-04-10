@@ -8,6 +8,7 @@ import { ui } from '../../../i18n/ui';
 import { Header } from '../../../components/Header';
 import { Badge } from '../../../components/ui/Badge';
 import { BookingWidget } from '../../../components/react/BookingWidget';
+import CalendarReservations from '../../../components/shared_vendor/CalendarReservations';
 import { Clock, Users, Zap, AlertTriangle, CheckCircle, StopCircle, Search, MapPin, Star } from 'lucide-react';
 import { getDefaultRoomGallery } from '../../../lib/default-room-images';
 
@@ -396,10 +397,13 @@ import { SingleGameMap } from '../../../components/react/SingleGameMap';
                         client:visible 
                     />
                 ) : isVerified && game.booking_manager === 'erdirector' && game.erd_game_id && game.erd_token ? (
-                    <div class="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-tropical-secondary/20 p-2 sm:p-4 overflow-hidden min-h-[600px]">
-                        <div id="app" data-type="booking" data-calendarstyle="Light" data-textstyle="Dark" data-game={game.erd_game_id.replace(/\s+/g, '')} data-calendar={game.erd_game_id.replace(/\s+/g, '')} data-lang={lang} data-token={game.erd_token}></div>
-                        <script src="https://erdpanel.com/dist/build.js" is:inline></script>
-                    </div>
+                    <CalendarReservations
+                        client:visible
+                        palette="tropical"
+                        erdToken={game.erd_token}
+                        erdGameId={game.erd_game_id}
+                        numPeople={game.players_min || 2}
+                    />
                 ) : game.booking_manager === 'external' && bookingUrl ? (
                     <div class="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-tropical-secondary/20 overflow-hidden">
                         <div class="bg-tropical-primary p-4 sm:p-6 text-white">
