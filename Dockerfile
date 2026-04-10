@@ -5,8 +5,8 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
-# Install fuser for port management
-RUN apk add --no-cache fuser psmisc
+# Install lsof for port management
+RUN apk add --no-cache lsof
 
 # Clone fresh from GitHub — bypasses Dokploy's stale build context
 RUN apk add --no-cache git && \
