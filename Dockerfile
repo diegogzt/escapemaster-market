@@ -5,6 +5,10 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4321
 
+# Build args for env vars needed at build time ( baked into client bundle )
+ARG PUBLIC_API_URL
+ENV PUBLIC_API_URL=${PUBLIC_API_URL}
+
 # Install lsof for port management
 RUN apk add --no-cache lsof
 
