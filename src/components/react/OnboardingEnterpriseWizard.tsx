@@ -37,6 +37,9 @@ export function OnboardingEnterpriseWizard({ lang }: { lang: string }) {
   const [importedRooms, setImportedRooms] = useState<ManagerRoom[]>([]);
   const [connected, setConnected] = useState(false);
 
+  // Connection type: 'manager' or 'erd'
+  const [connectionType, setConnectionType] = useState<"manager" | "erd">("erd");
+
   // Step 2: Company data
   const [organizationName, setOrganizationName] = useState("");
   const [city, setCity] = useState("");
@@ -60,7 +63,7 @@ export function OnboardingEnterpriseWizard({ lang }: { lang: string }) {
     })();
   }, [lang]);
 
-  // Step 1: Connect to Manager
+  // Step 1: Connect to Manager or ERD
   async function handleConnect(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -68,7 +71,11 @@ export function OnboardingEnterpriseWizard({ lang }: { lang: string }) {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/enterprise/connect-manager`, {
+      const endpoint = connectionType === "erd"
+        ? `${API_BASE}/enterprise/connect-erd`
+        : `${API_BASE}/enterprise/connect-manager`;
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -91,7 +98,6 @@ export function OnboardingEnterpriseWizard({ lang }: { lang: string }) {
       setManagerRooms(data.rooms || []);
       setConnected(true);
 
-      // Pre-select all rooms
       const allIds = new Set<string>((data.rooms || []).map((r: ManagerRoom) => r.id));
       setSelectedRoomIds(allIds);
     } catch (e: any) {
@@ -116,16 +122,21 @@ export function OnboardingEnterpriseWizard({ lang }: { lang: string }) {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/enterprise/import-rooms`, {
+      const endpoint = connectionType === "erd"
+        ? `${API_BASE}/enterprise/import-erd-rooms`
+        : `${API_BASE}/enterprise/import-rooms`;
+
+      const body = connectionType === "erd"
+        ? { erdRooms: managerRooms.filter((r) => selectedRoomIds.has(r.id)) }
+        : { managerToken, roomIds: Array.from(selectedRoomIds) };
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          managerToken,
-          roomIds: Array.from(selectedRoomIds),
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -295,11 +306,51 @@ export function OnboardingEnterpriseWizard({ lang }: { lang: string }) {
             </div>
           )}
 
-          {/* Step 1: Connect Manager */}
+          {/* Step 1: Connect Manager or ERD */}
           {step === 1 && (
             <div className="mt-6 space-y-4">
               {!connected ? (
                 <form onSubmit={handleConnect} className="space-y-4">
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-tropical-text">
+                      {lang === "en" ? "Select platform:" : "Selecciona plataforma:"}
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setConnectionType("erd")}
+                        className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                          connectionType === "erd"
+                            ? "border-tropical-primary bg-tropical-primary/5"
+                            : "border-tropical-secondary/20 bg-white"
+                        }`}
+                      >
+                        <div className="text-lg font-black text-tropical-text">
+                          ERD Panel
+                        </div>
+                        <div className="text-xs text-tropical-text/60 mt-1">
+                          erdpanel.com
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConnectionType("manager")}
+                        className={`p-4 rounded-2xl border-2 text-left transition-all ${
+                          connectionType === "manager"
+                            ? "border-tropical-primary bg-tropical-primary/5"
+                            : "border-tropical-secondary/20 bg-white"
+                        }`}
+                      >
+                        <div className="text-lg font-black text-tropical-text">
+                          Manager
+                        </div>
+                        <div className="text-xs text-tropical-text/60 mt-1">
+                          api.manager.escapemaster.es
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-tropical-text">
                       {t("onboarding.enterprise.step1_email")}
@@ -308,7 +359,7 @@ export function OnboardingEnterpriseWizard({ lang }: { lang: string }) {
                       type="email"
                       value={managerEmail}
                       onChange={(e) => setManagerEmail(e.target.value)}
-                      placeholder="email@manager.com"
+                      placeholder={connectionType === "erd" ? "email@erdpanel.com" : "email@manager.com"}
                       required
                     />
                   </div>
