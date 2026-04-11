@@ -64,6 +64,7 @@ export function EnterpriseDashboard({ lang }: { lang: string }) {
   const [erdPassword, setErdPassword] = useState("");
   const [erdRooms, setErdRooms] = useState<ErdRoom[]>([]);
   const [selectedErdRoomIds, setSelectedErdRoomIds] = useState<Set<string>>(new Set());
+  const [erdApiToken, setErdApiToken] = useState<string | null>(null);
   const [importingEr, setImportingEr] = useState(false);
   const [erdError, setErdError] = useState<string | null>(null);
   const [erdSuccess, setErdSuccess] = useState<string | null>(null);
@@ -139,6 +140,7 @@ export function EnterpriseDashboard({ lang }: { lang: string }) {
 
       const rooms = data.rooms || [];
       setErdRooms(rooms);
+      setErdApiToken(data.erd_api_token || null);
       const allIds = new Set<string>(rooms.map((r: ErdRoom) => r.id));
       setSelectedErdRoomIds(allIds);
     } catch (e: any) {
@@ -177,7 +179,10 @@ export function EnterpriseDashboard({ lang }: { lang: string }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ erdRooms: roomsToImport }),
+        body: JSON.stringify({
+          erdRooms: roomsToImport,
+          erd_api_token: erdApiToken,
+        }),
       });
 
       const data = await res.json().catch(() => ({}));
