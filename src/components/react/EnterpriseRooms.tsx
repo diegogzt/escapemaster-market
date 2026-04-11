@@ -628,11 +628,31 @@ function RoomEditView({ room, form, lang, onBack, onFieldChange, onSave, saving 
 function CalendarModal({ room, lang, apiBase, onClose, onSave }: { room: RoomDetail; lang: string; apiBase: string; onClose: () => void; onSave: () => void }) {
   const [settings, setSettings] = useState<Record<string, any>>(room.calendar?.style_settings || {});
   const [saving, setSaving] = useState(false);
+  const [calendars, setCalendars] = useState<any[]>([]);
+  const [loadingCalendars, setLoadingCalendars] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newCalName, setNewCalName] = useState("");
+  const [newCalType, setNewCalType] = useState<"erd" | "escapemaster">("erd");
+  const [newCalToken, setNewCalToken] = useState("");
+  const [newCalGameId, setNewCalGameId] = useState(room.erd_game_id || "");
+
+  // Load calendars
+  useEffect(() => {
+    if (!room.calendar_id) {
+      setLoadingCalendars(true);
+      fetchWithAuth(`${apiBase}/enterprise/calendars`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.success) setCalendars(data.data || []);
+        })
+        .catch(console.error)
+        .finally(() => setLoadingCalendars(false));
+    }
+  }, [apiBase, room.calendar_id]);
 
   const save = async () => {
     setSaving(true);
     try {
-      // Update calendar style_settings via enterprise calendars endpoint
       if (room.calendar_id) {
         await fetchWithAuth(`${apiBase}/enterprise/calendars/${room.calendar_id}`, {
           method: "PUT",
@@ -645,9 +665,221 @@ function CalendarModal({ room, lang, apiBase, onClose, onSave }: { room: RoomDet
     }
   };
 
+  const selectCalendar = async (calendarId: string) => {
+    setSaving(true);
+    try {
+      await fetchWithAuth(`${apiBase}/enterprise/rooms/${room.id}`, {
+        method: "PUT",
+        body: JSON.stringify({ calendar_id: calendarId }),
+      });
+      onSave();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const createCalendar = async () => {
+    if (!newCalName.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetchWithAuth(`${apiBase}/enterprise/calendars`, {
+        method: "POST",
+        body: JSON.stringify({
+          name: newCalName.trim(),
+          type: newCalType,
+          erd_token: newCalType === "erd" ? newCalToken : undefined,
+          erd_game_id: newCalType === "erd" ? newCalGameId : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.data?.id) {
+        // Assign to room
+        await fetchWithAuth(`${apiBase}/enterprise/rooms/${room.id}`, {
+          method: "PUT",
+          body: JSON.stringify({ calendar_id: data.data.id }),
+        });
+        onSave();
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const updateSetting = (key: string, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
+
+  // If room has no calendar assigned, show selection/creation UI
+  if (!room.calendar_id) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in slide-in-from-bottom-4">
+          <div className="sticky top-0 bg-white border-b border-tropical-secondary/10 px-5 py-4 flex items-center justify-between rounded-t-2xl">
+            <h3 className="font-black text-tropical-primary">
+              {lang === "en" ? "Assign Calendar" : "Asignar Calendario"}
+            </h3>
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-tropical-card transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+
+          <div className="p-5 space-y-5">
+            {!showCreate ? (
+              <>
+                <p className="text-sm text-tropical-text/70">
+                  {lang === "en"
+                    ? "Select an existing calendar or create a new one for this room."
+                    : "Selecciona un calendario existente o crea uno nuevo para esta sala."}
+                </p>
+
+                {loadingCalendars ? (
+                  <div className="flex justify-center py-8">
+                    <svg className="animate-spin w-8 h-8 text-tropical-primary" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                  </div>
+                ) : calendars.length > 0 ? (
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-tropical-text/50">
+                      {lang === "en" ? "Available Calendars" : "Calendarios Disponibles"}
+                    </h4>
+                    {calendars.map(cal => (
+                      <button
+                        key={cal.id}
+                        onClick={() => selectCalendar(cal.id)}
+                        disabled={saving}
+                        className="w-full flex items-center gap-3 p-4 rounded-xl border border-tropical-secondary/20 hover:border-tropical-primary/50 hover:bg-tropical-card/50 transition-colors text-left disabled:opacity-50"
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-tropical-primary/10 flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-tropical-primary"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-tropical-text truncate">{cal.name}</div>
+                          <div className="text-xs text-tropical-text/50">{cal.type === "erd" ? "ERD Panel" : "EscapeMaster"}</div>
+                        </div>
+                        {cal.is_default && (
+                          <span className="text-xs bg-tropical-secondary/20 text-tropical-secondary px-2 py-0.5 rounded-full">
+                            {lang === "en" ? "Default" : "Por defecto"}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-tropical-text/50 text-center py-4">
+                    {lang === "en" ? "No calendars yet. Create one below." : "No hay calendarios. Crea uno abajo."}
+                  </p>
+                )}
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={onClose}
+                    className="flex-1 h-11 rounded-xl border border-tropical-secondary/20 text-tropical-text font-semibold text-sm hover:bg-tropical-card/60 transition-colors"
+                  >
+                    {lang === "en" ? "Cancel" : "Cancelar"}
+                  </button>
+                  <button
+                    onClick={() => setShowCreate(true)}
+                    className="flex-1 h-11 rounded-xl bg-tropical-primary text-white font-bold text-sm hover:bg-tropical-secondary transition-colors"
+                  >
+                    {lang === "en" ? "Create New" : "Crear Nuevo"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-tropical-text/70">
+                  {lang === "en" ? "Create a new calendar for this room." : "Crea un nuevo calendario para esta sala."}
+                </p>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-semibold text-tropical-text/60 mb-1.5 block">
+                      {lang === "en" ? "Calendar Name" : "Nombre del Calendario"}
+                    </label>
+                    <input
+                      type="text"
+                      value={newCalName}
+                      onChange={e => setNewCalName(e.target.value)}
+                      placeholder={lang === "en" ? "e.g. Sala Barcelona" : "ej. Sala Barcelona"}
+                      className={INPUT_CLASS}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-tropical-text/60 mb-1.5 block">
+                      {lang === "en" ? "Type" : "Tipo"}
+                    </label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setNewCalType("erd")}
+                        className={`flex-1 h-10 rounded-lg border text-sm font-semibold transition-colors ${newCalType === "erd" ? "bg-tropical-primary text-white border-tropical-primary" : "bg-white text-tropical-text border-tropical-secondary/20 hover:border-tropical-primary/30"}`}
+                      >
+                        ERD Panel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewCalType("escapemaster")}
+                        className={`flex-1 h-10 rounded-lg border text-sm font-semibold transition-colors ${newCalType === "escapemaster" ? "bg-tropical-primary text-white border-tropical-primary" : "bg-white text-tropical-text border-tropical-secondary/20 hover:border-tropical-primary/30"}`}
+                      >
+                        EscapeMaster
+                      </button>
+                    </div>
+                  </div>
+
+                  {newCalType === "erd" && (
+                    <>
+                      <div>
+                        <label className="text-xs font-semibold text-tropical-text/60 mb-1.5 block">
+                          {lang === "en" ? "ERD Token" : "Token ERD"}
+                        </label>
+                        <input
+                          type="text"
+                          value={newCalToken}
+                          onChange={e => setNewCalToken(e.target.value)}
+                          placeholder={lang === "en" ? "Your ERD Panel token" : "Token de tu Panel ERD"}
+                          className={INPUT_CLASS}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-tropical-text/60 mb-1.5 block">
+                          {lang === "en" ? "ERD Game ID" : "ID Juego ERD"}
+                        </label>
+                        <input
+                          type="text"
+                          value={newCalGameId}
+                          onChange={e => setNewCalGameId(e.target.value)}
+                          placeholder={room.erd_game_id || "e.g. 221"}
+                          className={INPUT_CLASS}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowCreate(false)}
+                    disabled={saving}
+                    className="flex-1 h-11 rounded-xl border border-tropical-secondary/20 text-tropical-text font-semibold text-sm hover:bg-tropical-card/60 transition-colors disabled:opacity-50"
+                  >
+                    {lang === "en" ? "Back" : "Volver"}
+                  </button>
+                  <button
+                    onClick={createCalendar}
+                    disabled={saving || !newCalName.trim()}
+                    className="flex-1 h-11 rounded-xl bg-tropical-primary text-white font-bold text-sm hover:bg-tropical-secondary transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {saving && <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>}
+                    {lang === "en" ? "Create & Assign" : "Crear y Asignar"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -662,6 +894,17 @@ function CalendarModal({ room, lang, apiBase, onClose, onSave }: { room: RoomDet
         </div>
 
         <div className="p-5 space-y-5">
+          {/* Calendar info */}
+          <div className="flex items-center gap-3 p-3 bg-tropical-card/50 rounded-xl">
+            <div className="w-10 h-10 rounded-lg bg-tropical-primary/10 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-tropical-primary"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            </div>
+            <div>
+              <div className="font-semibold text-tropical-text">{room.calendar?.name || "Calendario"}</div>
+              <div className="text-xs text-tropical-text/50">{room.calendar?.type === "erd" ? "ERD Panel" : "EscapeMaster"}</div>
+            </div>
+          </div>
+
           {/* Colors */}
           <div>
             <h4 className="text-xs font-black uppercase tracking-widest text-tropical-text/50 mb-3">{lang === "en" ? "Colors" : "Colores"}</h4>
