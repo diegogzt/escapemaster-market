@@ -3,7 +3,7 @@ import { Bell, Trophy, Star, Zap, CalendarCheck, CalendarX, Clock, Gift } from '
 import { $token } from '../../lib/store';
 import { cn } from '../../lib/utils';
 
-const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || 'http://localhost:8000/v1/api';
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || '';
 
 // Tipos de las notificaciones
 interface Notification {

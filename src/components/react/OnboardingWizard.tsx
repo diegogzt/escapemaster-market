@@ -5,7 +5,7 @@ import { Input } from "../ui/Input";
 
 type Step = 1 | 2 | 3 | 4;
 
-const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || '';
 
 export function OnboardingWizard({ lang }: { lang: string }) {
   const [step, setStep] = useState<Step>(1);

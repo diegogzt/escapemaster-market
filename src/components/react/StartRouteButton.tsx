@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Users, User, Loader2, Check, ChevronDown } from 'lucide-react';
 
-const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || '';
 
 interface StartRouteButtonProps {
     collectionId: string;

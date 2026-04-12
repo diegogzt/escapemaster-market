@@ -1,6 +1,6 @@
 import { query } from './db';
 
-const CMS_API_URL = import.meta.env.PUBLIC_CMS_API_URL || 'http://localhost:4322';
+const CMS_API_URL = import.meta.env.PUBLIC_CMS_API_URL || '';
 
 export interface CMSSection {
   id: string;

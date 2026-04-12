@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "../../i18n/ui";
 
-const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || '';
 
 type Org = {
   id: string;

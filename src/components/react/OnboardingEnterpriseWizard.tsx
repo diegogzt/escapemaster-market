@@ -13,7 +13,7 @@ interface ManagerRoom {
   description?: string;
 }
 
-const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || '';
 
 export function OnboardingEnterpriseWizard({ lang }: { lang: string }) {
   const t = useMemo(

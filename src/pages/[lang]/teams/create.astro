@@ -84,7 +84,7 @@ const t = ui[lang as keyof typeof ui] || ui.es;
 
 
 <script>
-  const API_BASE = import.meta.env.PUBLIC_API_URL || "http://localhost:8000/v1/api";
+  const API_BASE = import.meta.env.PUBLIC_API_URL || '';
   const form = document.getElementById('create-team-form') as HTMLFormElement;
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();

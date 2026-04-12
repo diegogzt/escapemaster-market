@@ -160,7 +160,7 @@ if (!squad) {
 
 
 <script>
-  const API_BASE = import.meta.env.PUBLIC_API_URL || "http://localhost:8000/v1/api";
+  const API_BASE = import.meta.env.PUBLIC_API_URL || '';
   document.getElementById('copy-code')?.addEventListener('click', () => {
     const code = document.getElementById('invite-code')?.textContent || '';
     navigator.clipboard.writeText(code).then(() => {

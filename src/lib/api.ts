@@ -1,5 +1,5 @@
-const API_URL = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000';
-const CMS_API_URL = import.meta.env.PUBLIC_CMS_API_URL || 'http://localhost:4322';
+const API_URL = import.meta.env.PUBLIC_API_URL || '';
+const CMS_API_URL = import.meta.env.PUBLIC_CMS_API_URL || '';
 
 class ApiError extends Error {
   status: number;

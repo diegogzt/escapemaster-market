@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MapPin, Loader2 } from 'lucide-react';
 import { GameCard } from './GameCard';
 
-const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || '';
 
 interface NearYouSectionProps {
     lang?: string;

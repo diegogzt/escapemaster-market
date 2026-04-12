@@ -19,7 +19,7 @@ import {
   MapPin,
 } from "lucide-react";
 
-const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
+const API_BASE = (import.meta.env.PUBLIC_API_URL as string) || '';
 
 interface BookingWidgetProps {
   roomId: string;
@@ -293,7 +293,7 @@ export const BookingWidget: React.FC<BookingWidgetProps> = ({
 
       const startTimeISO = `${selectedDate}T${selectedTime}:00`;
 
-      const apiBase = (import.meta.env.PUBLIC_API_URL as string) || "http://localhost:8000/v1/api";
+      const apiBase = (import.meta.env.PUBLIC_API_URL as string) || '';
       const res = await fetch(`${apiBase}/payments/create-checkout`, {
         method: "POST",
         headers,
